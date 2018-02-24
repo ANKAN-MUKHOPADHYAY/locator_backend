@@ -27,7 +27,7 @@ router.post('/addnewcourse', function(req,res){
 		if(results.length<1){
 			var queryMax = 'SELECT MAX(id)+1 as nid from offered_courses';
 			connection.query(queryMax, function(e,r){
-				console.log(r);
+				//console.log(r);
 				var newCoureID = 'L0000'+ r[0].nid;
 				//console.log(result);
 				var query = 'INSERT into offered_courses (??,??,??) Values (?,?,?)';
@@ -65,7 +65,7 @@ router.post('/addlocation',function(req,res){
 				var data = ['location_id','location_name','location_relevant_name','location_city','location_state','location_pincode','location_nearby',newLocationID,req.body.l_name,req.body.lr_name,req.body.l_city,req.body.l_state,req.body.l_pincode,req.body.l_nearby];
 
 				query = mysql.format(query,data);
-				console.log(query);
+				//console.log(query);
 				connection.query(query,function(err,result){
 					res.json({status: true, message: 'Location Created Successfully'});	
 				});

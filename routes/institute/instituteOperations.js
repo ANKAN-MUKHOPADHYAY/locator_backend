@@ -1,6 +1,7 @@
 var express = require('express');
 var mysql = require('mysql');
 var router = express.Router();
+var md5 = require('md5');
 
 var connection = mysql.createConnection({
 	host     : 'localhost',
@@ -18,7 +19,31 @@ connection.connect();
 });*/
 
 router.post('/addinstitute', function(req,res){
-	console.log("you are here");
+	//console.log("you are here");
+	var chkQry = "SELECT * FROM institute_registration WHERE ??=? OR ??=? OR ??=?";
+	var cheQryData = ['inst_name',req.body.i_name,'inst_contact',req.body.i_contact,'inst_email',req.body.i_email];
+	chkQry = mysql.format(chkQry,cheQryData);
+	//console.log(chkQry);
+	connection.query(chkQry,function(errr,results){
+		if(results.length<1){
+			var query = 'INSERT into institute_registration (??,??,??,??,??,??,??,??) values (?,?,?,?,?,?,?,?)';
+			var data = ['inst_name','inst_address','inst_city','inst_contact','inst_altcontact','inst_email','inst_password','inst_images',req.body.i_name,req.body.i_address,req.body.i_city,req.body.i_contact,req.body.i_altcontact,req.body.i_email,md5(req.body.i_password),req.body.i_images];
+			query = mysql.format(query,data);
+			console.log(query);
+			connection.query(query,function(err,result){
+				//console.log(result);
+				var x = {};
+				x.user_id = result.insertId;
+				res.json({status: true, message: 'Institute Added Successfully',result: x});	
+
+			});
+		}else{
+			res.json({status: false,message: 'Institute Already Exist',result: results[0]});
+		}
+	});
+});
+
+/*router.post('/addinstitute', function(req,res){
 	var chkQry = "SELECT * FROM institute_registration WHERE ??=? OR ??=? OR ??=?";
 	var cheQryData = ['inst_name',req.body.i_name,'inst_contact',req.body.i_contact,'inst_altcontact',req.body.i_altcontact,'inst_email',req.body.i_email];
 	chkQry = mysql.format(chkQry,cheQryData);
@@ -40,31 +65,7 @@ router.post('/addinstitute', function(req,res){
 			res.json({status: false,message: 'Institute Already Exist',result: results[0]});
 		}
 	});
-});
-
-router.post('/addinstitute', function(req,res){
-	var chkQry = "SELECT * FROM institute_registration WHERE ??=? OR ??=? OR ??=?";
-	var cheQryData = ['inst_name',req.body.i_name,'inst_contact',req.body.i_contact,'inst_altcontact',req.body.i_altcontact,'inst_email',req.body.i_email];
-	chkQry = mysql.format(chkQry,cheQryData);
-	console.log(chkQry);
-	connection.query(chkQry,function(errr,results){
-		if(results.length<1){
-			var query = 'INSERT into institute_registration (??,??,??,??,??,??,??) values (?,?,?,?,?,?,?)';
-			var data = ['inst_name','inst_address','inst_city','inst_contact','inst_altcontact','inst_email','inst_images',req.body.i_name,req.body.i_address,req.body.i_city,req.body.i_contact,req.body.i_altcontact,req.body.i_email,req.body.i_images];
-			query = mysql.format(query,data);
-			//console.log(query);
-			connection.query(query,function(err,result){
-				//console.log(result);
-				var x = {};
-				x.user_id = result.insertId;
-				res.json({status: true, message: 'Institute Added Successfully',result: x});	
-
-			});
-		}else{
-			res.json({status: false,message: 'Institute Already Exist',result: results[0]});
-		}
-	});
-});
+});*/
  
 router.post('/updatelc', function(req,res){
 	var chkQry = "SELECT * FROM institute_registration WHERE ??=?";
@@ -120,5 +121,27 @@ router.get('/searchstudents/:cid/:lid', function(req,res){
 
 });
 
+
+router.get('/receivedleads/:instid', function(req,res){
+	
+});
+
+router.post('/loginInstitute', function(req,res){
+	//console.log("you are here");
+	var chkQry = "SELECT * FROM institute_registration WHERE ??=? OR ??=? AND ??=?";
+	var cheQryData = ['inst_contact',req.body.i_loginparams,'inst_email',req.body.i_loginparams,'inst_password',md5(req.body.i_password)];
+	chkQry = mysql.format(chkQry,cheQryData);
+	//console.log(chkQry);
+	connection.query(chkQry,function(errr,results){
+		if(results.length>1){
+			res.json({status: false, message: 'Institute Details exist more than one'});	
+		}else{
+			delete(results[0].inst_off_courses);
+			delete(results[0].inst_prefer_locations);
+			delete(results[0].inst_password);
+			res.json({status: true,message: 'Institute Login Successful',result: results[0]});
+		}
+	});
+});
 
 module.exports = router;

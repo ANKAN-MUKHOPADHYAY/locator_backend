@@ -50,10 +50,11 @@ router.post('/userenquiry', function(req,res){
 			var query = 'INSERT into user_enquiry (??,??,??) values (?,?,?)';
 			var data = ['user_id','course_id','location_id',req.body.u_id,req.body.u_cid,req.body.u_lid];
 			query = mysql.format(query,data);
-			console.log(query);
+			//console.log(query);
 			connection.query(query,function(err,result){
-				res.json({status: true, message: 'User Enquiry Added Successfully'});	
-
+				var x = {};
+				x.enquiry_id = result.insertId;
+				res.json({status: true, message: 'User Enquiry Added Successfully', result:x});	
 			});
 		}else{
 			res.json({status: false,message: 'Enquiry Already Exist',result: results[0]});
@@ -67,14 +68,12 @@ router.get('/searchenquiry/:enqid', function(req,res){
 	var searchQryData = ['id',req.params.enqid];
 	searchQry = mysql.format(searchQry,searchQryData);
 	connection.query(searchQry,function(err,results){
-		console.log(results);
+		//console.log(results);
 		if(results.length>=1){
 			var queryLC= 'SELECT * from institute_registration where find_in_set(?,??) <> 0 and find_in_set(?,??) <> 0';
 			var queryLCData = [results[0].course_id,'inst_off_courses',results[0].location_id,'inst_prefer_locations'];
 			queryLC = mysql.format(queryLC,queryLCData);
-
-			console.log(queryLC);
-
+			//console.log(queryLC);
 			connection.query(queryLC,function(e,r){
 					res.json({status: true, response:r});	 
 			});
@@ -94,7 +93,7 @@ router.get('/usertransaction', function(req,res){
 	connection.query(searchQry,function(err,results){
 		if(results.length>=1){
 			results.forEach(function(i,v){
-				console.log(i.id);
+				//console.log(i.id);
 				var queryLC= 'SELECT id from institute_registration where find_in_set(?,??) <> 0 and find_in_set(?,??) <> 0';
 				var queryLCData = [i.course_id,'inst_off_courses',i.location_id,'inst_prefer_locations'];
 				queryLC = mysql.format(queryLC,queryLCData);
@@ -102,7 +101,7 @@ router.get('/usertransaction', function(req,res){
 				connection.query(queryLC,function(e,institutes){
 		 			//console.log(r);
 		 			institutes.forEach(function(value,key){
-		 				console.log(value);
+		 				//console.log(value);
 		 				var query = 'INSERT into enquiry_trans (??,??,??,??,??) values (?,?,?,?,?)';
 						var data = ['enq_id','inst_id','inst_enquired','inst_contacted','inst_student',i.id,value.id, 1,0,0];
 						query = mysql.format(query,data);
@@ -124,7 +123,7 @@ router.get('/usertransaction', function(req,res){
 				});
 			})
 
-			res.json({status:true, response: "Batch execution Successfully."});
+			res.json({status:true, response: "Batch Executed Successfully."});
 			 
 		}else{
 			res.json({status:false, response: "No Matching Found"});
