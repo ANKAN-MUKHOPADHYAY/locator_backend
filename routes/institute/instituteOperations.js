@@ -12,12 +12,6 @@ var connection = mysql.createConnection({
 
 connection.connect();
 
-/* GET home page. */
-/*router.get('/', function(req, res, next) {
-  //res.render('index', { title: 'Warm welcome from TechNinzaz' });
-  res.json({status:true, message: 'Hey Welcome'})
-});*/
-
 router.post('/addinstitute', function(req,res){
 	//console.log("you are here");
 	var chkQry = "SELECT * FROM institute_registration WHERE ??=? OR ??=? OR ??=?";
@@ -86,8 +80,8 @@ router.post('/updatelc', function(req,res){
 			connection.query(query,function(err,result){
 				//console.log(result);
 				var x = {};
-				x.user_id = result.insertId;
-				res.json({status: true, message: 'Institute Updated Successfully',result: x});	
+				x.user_id = req.body.i_id;
+				res.json({status: true, message: 'Institute Updated Successfully',result: x});	 
 
 			});
 		}else{
@@ -96,16 +90,14 @@ router.post('/updatelc', function(req,res){
 	});
 }); 
 
-
-
 router.get('/searchstudents/:cid/:lid', function(req,res){
-	var searchQry = 'SELECT * from user_enquiry where ?? like ?';
-	var searchQryData = ['id',req.params.enqid];
+	var searchQry = 'SELECT * from user_enquiry where ??=? AND ?? = ?';
+	var searchQryData = ['course_id',req.params.cid, 'location_id', req.params.lid];
 	searchQry = mysql.format(searchQry,searchQryData);
 	connection.query(searchQry,function(err,results){
-		console.log(results);
+		//console.log(results);
 		if(results.length>=1){
-			var queryLC= 'SELECT * from institute_registration where find_in_set(?,??) <> 0 and find_in_set(?,??) <> 0';
+			/*var queryLC= 'SELECT * from institute_registration where find_in_set(?,??) <> 0 and find_in_set(?,??) <> 0';
 			var queryLCData = [results[0].course_id,'inst_off_courses',results[0].location_id,'inst_prefer_locations'];
 			queryLC = mysql.format(queryLC,queryLCData);
 
@@ -113,17 +105,34 @@ router.get('/searchstudents/:cid/:lid', function(req,res){
 
 			connection.query(queryLC,function(e,r){
 					res.json({status: true, response:r});	 
+			});*/
+			var query1 = "SELECT et.enq_id, ue.user_id, ur.user_first_name, ur.user_last_name, ur.user_mobile_number, ur.user_altmobile_number, ur.user_email, ur.user_type, ue.course_id, ue.location_id FROM user_enquiry ue, enquiry_trans et, user_registration ur WHERE ?? = ?? AND ?? = ? AND ?? = ? AND ?? = ? AND ?? = ??";
+			var query1Data = ["ue.id", "et.enq_id", "ue.course_id", req.params.cid, "ue.location_id", req.params.lid, "et.inst_id", 11, "ue.user_id", "ur.user_id"];
+			query1 = mysql.format(query1, query1Data);
+			//console.log(query1);
+			connection.query(query1, function(e, r){
+				if(e) {
+					res.json({status: false, response: e});
+				} else {
+					/*r.forEach(function(i,k){
+						var queryCourse = "SELECT * FROM offered_locations WHERE ?? = ?";
+						var queryCourseData = ['id', i.course_id];
+						queryCourse = mysql.format(queryCourseData);
+						connection.query(queryCourse, function(eC, rC){
+							console.log('-----------');
+							console.log(rC);
+							//r[i].CourseInfoDetail = rC;
+							//console.log(r[i]);
+						});
+					});*/
+					res.json({status: true, response: r});
+				}
 			});
 		}else{
 			res.json({status:false, response: "No Matching Found"});
 		}
 	});
 
-});
-
-
-router.get('/receivedleads/:instid', function(req,res){
-	
 });
 
 router.post('/loginInstitute', function(req,res){
@@ -133,15 +142,18 @@ router.post('/loginInstitute', function(req,res){
 	chkQry = mysql.format(chkQry,cheQryData);
 	//console.log(chkQry);
 	connection.query(chkQry,function(errr,results){
+		//console.log(results);
 		if(results.length>1){
 			res.json({status: false, message: 'Institute Details exist more than one'});	
 		}else{
-			delete(results[0].inst_off_courses);
+			/*delete(results[0].inst_off_courses);
 			delete(results[0].inst_prefer_locations);
-			delete(results[0].inst_password);
+			delete(results[0].inst_password);*/
 			res.json({status: true,message: 'Institute Login Successful',result: results[0]});
 		}
 	});
 });
+
+
 
 module.exports = router;

@@ -48,7 +48,6 @@ router.get('/searchcourses/:course', function(req,res){
 			res.json({status:false, response: "Coure Not Found"});
 		}
 	});
-
 });
 
 router.get('/searchlocations/:location', function(req,res){
@@ -65,7 +64,6 @@ router.get('/searchlocations/:location', function(req,res){
 			res.json({status:false, response: "Location Not Found"});
 		}
 	});
-
 });
 
 module.exports = router;
