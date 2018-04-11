@@ -73,10 +73,11 @@ router.get('/searchstudents/:cid/:lid', function(req,res){
 	connection.query(searchQry,function(err,results){
 		//console.log(results);
 		if(results.length>=1){
-			var query1 = "SELECT et.enq_id, ue.user_id, ur.user_first_name, ur.user_last_name, ur.user_mobile_number, ur.user_altmobile_number, ur.user_email, ur.user_type, ue.course_id, ue.datetime, ue.location_id FROM user_enquiry ue, enquiry_trans et, user_registration ur WHERE ?? = ?? AND ?? = ? AND ?? = ? AND ?? = ? AND ?? = ??";
-			var query1Data = ["ue.id", "et.enq_id", "ue.course_id", req.params.cid, "ue.location_id", req.params.lid, "et.inst_id", 11, "ue.user_id", "ur.user_id"];
+			var query1 = "SELECT et.enq_id, GROUP_CONCAT(DISTINCT et.inst_id) as institute_received, loc.location_name, loc.id as location_id, loc.location_city, loc.location_state,course.course_name, course.id as course_id, ue.user_id, ur.user_first_name, ur.user_last_name, ur.user_mobile_number, ur.user_altmobile_number, ur.user_email, ur.user_type, ue.course_id, ue.datetime, ue.location_id FROM user_enquiry ue, enquiry_trans et, user_registration ur, offered_locations loc, offered_courses course WHERE ?? = ?? AND ?? = ? AND ?? = ? AND ?? = ?? GROUP BY ue.user_id";
+			var query1Data = ["ue.id", "et.enq_id", "ue.course_id", req.params.cid, "ue.location_id", req.params.lid, "ue.user_id", "ur.user_id"];
 			query1 = mysql.format(query1, query1Data);
-			//console.log(query1);
+			console.log('----------');
+			console.log(query1);
 			connection.query(query1, function(e, r){
 				if(e) {
 					res.json({status: false, response: e});
@@ -210,6 +211,67 @@ router.post('/sendMessage', function(req,res){
 			});
 		}else{
 			res.json({status: false,message: 'Enquiry having some problem. Try again later'});
+		}
+	});
+});
+
+router.post('/offerings',function(req,res){
+	var chkQry = "SELECT * FROM institute_registration WHERE ??=?";
+	var cheQryData = ['id',req.body.i_id];
+	chkQry = mysql.format(chkQry,cheQryData);
+	console.log(chkQry);
+	connection.query(chkQry,function(errr,results){
+		var query;
+		var query1Data;
+		if(results.length==1 && req.body.i_type=='course'){
+			query = 'SELECT b.*, "true" as opted FROM institute_registration a INNER JOIN offered_courses b ON FIND_IN_SET(b.id, a.inst_off_courses) > 0 WHERE a.id=?';
+			query1Data = [req.body.i_id];
+		} else if(results.length==1 && req.body.i_type=='location'){
+			query = 'SELECT b.*, "true" as opted FROM institute_registration a INNER JOIN offered_locations b ON FIND_IN_SET(b.id, a.inst_prefer_locations) > 0 WHERE a.id=?';
+			query1Data = [req.body.i_id];
+		} else {
+			res.json({status: false,message: 'There is some problem'});
+		}
+
+		query = mysql.format(query, query1Data);
+		connection.query(query,function(er,result){
+			res.json({status: true, message: 'Successful', response: result});	
+		});
+	});
+});
+
+
+router.get('/getInstituteInformation/:instid', function(req,res){
+	var chkQry = "SELECT * FROM institute_registration WHERE ??=?";
+	var cheQryData = ['id',req.params.instid];
+	chkQry = mysql.format(chkQry,cheQryData);
+	connection.query(chkQry,function(errr,results){
+		console.log(results);
+		var locationQry,courseQry;
+		var locquery1Data,coursequery1Data;
+		if(results.length==1){
+			courseQry = 'SELECT b.*, "true" as opted FROM institute_registration a INNER JOIN offered_courses b ON FIND_IN_SET(b.id, a.inst_off_courses) > 0 WHERE a.id=?';
+			coursequery1Data = [req.params.instid];
+			
+			locationQry = 'SELECT b.*, "true" as opted FROM institute_registration a INNER JOIN offered_locations b ON FIND_IN_SET(b.id, a.inst_prefer_locations) > 0 WHERE a.id=?';
+			locquery1Data = [req.params.instid];
+
+			courseQry = mysql.format(courseQry, coursequery1Data);
+			connection.query(courseQry,function(er,result){
+				delete results[0].inst_off_courses;
+				delete results[0].inst_prefer_locations;
+				delete results[0].inst_password;
+
+				locationQry = mysql.format(locationQry, locquery1Data);
+				connection.query(locationQry,function(e,resp){
+					results[0].courses = result;
+					results[0].location = resp;
+					//console.log(results);
+					res.json({status: true, message: 'Successful', response: results});	
+				});
+			});
+		} else {
+			res.json({status: false,message: 'There is some problem'});
 		}
 	});
 });
