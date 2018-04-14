@@ -35,12 +35,12 @@ router.get('/alllocation', function(req, res, next) {
 });
 
 router.get('/searchcourses/:course', function(req,res){
-	//console.log(req.params.course);
+	console.log(req.params.course);
 	var x =  '%'+req.params.course+'%';
 	var searchQry = 'SELECT * from offered_courses where ?? like ?';
 	var searchQryData = ['course_name',x];
 	searchQry = mysql.format(searchQry,searchQryData);
-	//console.log(searchQry);
+	console.log(searchQry);
 	connection.query(searchQry,function(err,results){
 		if(results.length>=1){
 			res.json({status:true, response: results});

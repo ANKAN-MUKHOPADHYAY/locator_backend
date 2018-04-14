@@ -27,9 +27,9 @@ router.post('/loginCandidate', function(req,res){
 	connection.query(chkQry,function(errr,results){
 		console.log(results);
 		if(results.length>1){
-			res.json({status: false, message: 'User Details exist more than one'});	
+			res.json({status: false, message: 'User Details exist more than one'});
 		}else if(results.length == 0){
-			res.json({status: false, message: 'User Details doesnot exist'});	
+			res.json({status: false, message: 'User Details doesnot exist'});
 		} else {
 			delete(results[0].user_pwd);
 			res.json({status: true,message: 'User Login Successful',result: results[0]});
@@ -52,7 +52,7 @@ router.post('/adduser', function(req,res){
 				//console.log(result);
 				var x = {};
 				x.user_id = result.insertId;
-				res.json({status: true, message: 'User Added Successfully',result: x});	
+				res.json({status: true, message: 'User Added Successfully',result: x});
 
 			});
 		}else{
@@ -74,7 +74,7 @@ router.post('/userenquiry', function(req,res){
 			connection.query(query,function(err,result){
 				var x = {};
 				x.enquiry_id = result.insertId;
-				res.json({status: true, message: 'User Enquiry Added Successfully', result:x});	
+				res.json({status: true, message: 'User Enquiry Added Successfully', result:x});
 			});
 		}else{
 			res.json({status: false,message: 'Enquiry Already Exist',result: results[0]});
@@ -94,7 +94,7 @@ router.get('/searchenquiry/:enqid', function(req,res){
 			queryLC = mysql.format(queryLC,queryLCData);
 			console.log(queryLC);
 			connection.query(queryLC,function(e,r){
-					res.json({status: true, response:r});	 
+					res.json({status: true, response:r});
 			});
 		}else{
 			res.json({status:false, response: "No Matching Found"});
@@ -128,21 +128,21 @@ router.get('/usertransaction', function(req,res){
 							//console.log(result);
 						});
 
-		 			});	
-					
-					 
-				});	
+		 			});
+
+
+				});
 
 				var query = 'UPDATE user_enquiry SET ??=? WHERE ??=?';
 				var data = ['batch','1','id',i.id];
-				query = mysql.format(query,data); 
+				query = mysql.format(query,data);
 				connection.query(query,function(err,result){
 						//res.json({status:true, response: "Batch execution Successfully."});
 				});
 			})
 
 			res.json({status:true, response: "Batch Executed Successfully."});
-			 
+
 		}else{
 			res.json({status:false, response: "No Matching Found"});
 		}
@@ -158,11 +158,28 @@ router.get('/userenquiries/:userid', function(req,res){
 	connection.query(enuryQry,function(err,results){
 		console.log(results);
 		if(results.length>=1){
-			res.json({status: true, result:results[0]});	 
+			res.json({status: true, result:results[0]});
 		}else{
 			res.json({status:false, result: "No Matching Found"});
 		}
 	});
 });
- 
+
+router.get('/userinfo/:usrid', function(req,res){
+	console.log(req.params.usrid);
+	var usrQry = 'SELECT * from user_registration WHERE ??=?';
+	var usrData = ['user_id',req.params.usrid];
+	usrQry = mysql.format(usrQry,usrData);
+	console.log(usrQry);
+	connection.query(usrQry,function(err,results){
+		console.log(results);
+		if(results.length>=1){
+			delete results[0].user_pwd;
+			res.json({status: true, result:results[0]});
+		}else{
+			res.json({status:false, result: "No Matching Found"});
+		}
+	});
+});
+
 module.exports = router;
