@@ -1,15 +1,8 @@
 var express = require('express');
 var mysql = require('mysql');
 var router = express.Router();
+var connection = require('./dbconnection');
 
-var connection = mysql.createConnection({
-  host     : 'localhost',
-  user     : 'root',
-  password : '',
-  database : 'techninzaz_locator'
-});
-
-connection.connect();
 
 /* GET home page. */
 /*router.get('/', function(req, res, next) {
@@ -39,15 +32,15 @@ router.post('/addnewcourse', function(req,res){
 					res.json({status: true, message:'Course Created Successfully'});
 				});
 			});
-			
-			
+
+
 		} else {
 			res.json({status: false, message:'Course Already Exist', result: results[0]});
 		}
-		
+
 	});
 	//console.log(req.body);
-	
+
 	//res.json({status:true, message: 'Success Response', result: {fname:'Jagan',lname:'Mohan'}})
 });
 
@@ -67,7 +60,7 @@ router.post('/addlocation',function(req,res){
 				query = mysql.format(query,data);
 				//console.log(query);
 				connection.query(query,function(err,result){
-					res.json({status: true, message: 'Location Created Successfully'});	
+					res.json({status: true, message: 'Location Created Successfully'});
 				});
 			});
 		}else{

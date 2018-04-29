@@ -1,22 +1,9 @@
 var express = require('express');
 var mysql = require('mysql');
 var router = express.Router();
+var connection = require('../dbconnection');
 var md5 = require('md5');
 
-var connection = mysql.createConnection({
-	host     : 'localhost',
-	user     : 'root',
-	password : '',
-	database : 'techninzaz_locator'
-});
-
-connection.connect();
-
-/* GET home page. */
-/*router.get('/', function(req, res, next) {
-  //res.render('index', { title: 'Warm welcome from TechNinzaz' });
-  res.json({status:true, message: 'Hey Welcome'})
-});*/
 
 router.post('/loginCandidate', function(req,res){
 	console.log(req.body);
@@ -87,14 +74,23 @@ router.get('/searchenquiry/:enqid', function(req,res){
 	var searchQryData = ['id',req.params.enqid];
 	searchQry = mysql.format(searchQry,searchQryData);
 	connection.query(searchQry,function(err,results){
-		//console.log(results);
+		console.log(results[0].batch);
 		if(results.length>=1){
-			var queryLC= 'SELECT * from institute_registration where find_in_set(?,??) <> 0 and find_in_set(?,??) <> 0';
-			var queryLCData = [results[0].course_id,'inst_off_courses',results[0].location_id,'inst_prefer_locations'];
-			queryLC = mysql.format(queryLC,queryLCData);
-			console.log(queryLC);
+			var queryLC,queryLCData;
+			if(results[0].batch == 0) {
+				queryLC= 'SELECT * from institute_registration where find_in_set(?,??) <> 0 and find_in_set(?,??) <> 0';
+				queryLCData = [results[0].course_id,'inst_off_courses',results[0].location_id,'inst_prefer_locations'];
+				queryLC = mysql.format(queryLC,queryLCData);
+				console.log(queryLC);
+			} else {
+				queryLC= 'SELECT e.tranx_id tranx_id, i.id id, i.inst_name inst_name,i.inst_address inst_address, i.inst_city inst_city, i.inst_contact inst_contact, i.inst_altcontact inst_altcontact, i.inst_email inst_email, i.inst_images inst_images, i.inst_about inst_about,i.inst_desc inst_desc, e.inst_message inst_message, e.inst_enquired inst_enquired, e.inst_contacted inst_contacted, e.inst_student inst_student FROM enquiry_trans e INNER JOIN institute_registration i ON e.inst_id = i.id WHERE ??=?';
+				queryLCData = ['enq_id',req.params.enqid];
+				queryLC = mysql.format(queryLC,queryLCData);
+				console.log(queryLC);
+			}
 			connection.query(queryLC,function(e,r){
-					res.json({status: true, response:r});
+				console.log(r);
+				res.json({status: true, response:r});
 			});
 		}else{
 			res.json({status:false, response: "No Matching Found"});
@@ -117,10 +113,10 @@ router.get('/usertransaction', function(req,res){
 				queryLC = mysql.format(queryLC,queryLCData);
 
 				connection.query(queryLC,function(e,institutes){
-		 			//console.log(r);
-		 			institutes.forEach(function(value,key){
-		 				//console.log(value);
-		 				var query = 'INSERT into enquiry_trans (??,??,??,??,??) values (?,?,?,?,?)';
+					//console.log(r);
+					institutes.forEach(function(value,key){
+						//console.log(value);
+						var query = 'INSERT into enquiry_trans (??,??,??,??,??) values (?,?,?,?,?)';
 						var data = ['enq_id','inst_id','inst_enquired','inst_contacted','inst_student',i.id,value.id, 1,0,0];
 						query = mysql.format(query,data);
 
@@ -128,7 +124,7 @@ router.get('/usertransaction', function(req,res){
 							//console.log(result);
 						});
 
-		 			});
+					});
 
 
 				});
@@ -137,7 +133,7 @@ router.get('/usertransaction', function(req,res){
 				var data = ['batch','1','id',i.id];
 				query = mysql.format(query,data);
 				connection.query(query,function(err,result){
-						//res.json({status:true, response: "Batch execution Successfully."});
+					//res.json({status:true, response: "Batch execution Successfully."});
 				});
 			})
 
@@ -151,14 +147,13 @@ router.get('/usertransaction', function(req,res){
 
 router.get('/userenquiries/:userid', function(req,res){
 	console.log(req.params.userid);
-	var enuryQry = 'SELECT id as enquiry_id  from user_enquiry WHERE ??=? ORDER BY datetime DESC';
+	var enuryQry = 'SELECT id as enquiry_id from user_enquiry WHERE ??=? ORDER BY datetime DESC';
 	var enuryData = ['user_id',req.params.userid];
 	enuryQry = mysql.format(enuryQry,enuryData);
 	console.log(enuryQry);
 	connection.query(enuryQry,function(err,results){
-		console.log(results);
 		if(results.length>=1){
-			res.json({status: true, result:results[0]});
+			res.json({status: true, result:results});
 		}else{
 			res.json({status:false, result: "No Matching Found"});
 		}
@@ -178,6 +173,21 @@ router.get('/userinfo/:usrid', function(req,res){
 			res.json({status: true, result:results[0]});
 		}else{
 			res.json({status:false, result: "No Matching Found"});
+		}
+	});
+});
+
+router.get('/usermessage/:transactionId', function(req,res){
+	var usrQry = 'SELECT inst_message from enquiry_trans WHERE ??=?';
+	var usrData = ['tranx_id',req.params.transactionId];
+	usrQry = mysql.format(usrQry,usrData);
+	console.log(usrQry);
+	connection.query(usrQry,function(err,results){
+		console.log(results);
+		if(results.length>=1){
+			res.json({status: true, result: results[0].inst_message});
+		}else{
+			res.json({status:false, result: "No Message Available"});
 		}
 	});
 });

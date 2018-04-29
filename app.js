@@ -8,10 +8,10 @@ var cors = require('cors');
 
 var index = require('./routes/index');
 var users = require('./routes/users');
-var adminOps = require('./routes/adminoperations'); 
-var searchOps = require('./routes/search/searchOperations'); 
-var userOps = require('./routes/user/userOperations'); 
-var instOps = require('./routes/institute/instituteOperations'); 
+var adminOps = require('./routes/adminoperations');
+var searchOps = require('./routes/search/searchOperations');
+var userOps = require('./routes/user/userOperations');
+var instOps = require('./routes/institute/instituteOperations');
 
 var app = express();
 

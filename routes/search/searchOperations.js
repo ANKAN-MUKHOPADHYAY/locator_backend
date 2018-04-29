@@ -1,15 +1,9 @@
 var express = require('express');
 var mysql = require('mysql');
+var connection = require('../dbconnection');
 var router = express.Router();
 
-var connection = mysql.createConnection({
-  host     : 'localhost',
-  user     : 'root',
-  password : '',
-  database : 'techninzaz_locator'
-});
 
-connection.connect();
 
 /* GET home page. */
 router.get('/allcourses', function(req, res, next) {
