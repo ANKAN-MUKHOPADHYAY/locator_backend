@@ -26,13 +26,13 @@ router.post('/loginCandidate', function(req,res){
 
 router.post('/adduser', function(req,res){
 	var chkQry = "SELECT * FROM user_registration WHERE ??=? OR ??=? OR ??=?";
-	var cheQryData = ['user_mobile_number',req.body.u_mobile,'user_email',req.body.u_email,'user_altmobile_number',req.body.u_altmobile];
+	var cheQryData = ['user_mobile_number',req.body.u_mobile,'user_email',req.body.u_email,'user_altmobile_number',req.body.u_mobile];
 	chkQry = mysql.format(chkQry,cheQryData);
-	//console.log(chkQry);
+	console.log(chkQry);
 	connection.query(chkQry,function(errr,results){
 		if(results.length<1){
-			var query = 'INSERT into user_registration (??,??,??,??,??,??,??) values (?,?,?,?,?,?,?)';
-			var data = ['user_first_name','user_last_name','user_mobile_number','user_altmobile_number','user_email','user_type','user_pwd',req.body.u_fname,req.body.u_lname,req.body.u_mobile,req.body.u_altmobile,req.body.u_email,req.body.u_type,md5(req.body.u_password)];
+			var query = 'INSERT into user_registration (??,??,??,??,??,??,??,??) values (?,?,?,?,?,?,?,?)';
+			var data = ['user_first_name','user_last_name','user_mobile_number','user_altmobile_number','user_email','user_type','user_pwd','active_status',req.body.u_fname,req.body.u_lname,req.body.u_mobile,req.body.u_altmobile,req.body.u_email,req.body.u_type,md5(req.body.u_password),1];
 			query = mysql.format(query,data);
 			console.log(query);
 			connection.query(query,function(err,result){
@@ -41,6 +41,12 @@ router.post('/adduser', function(req,res){
 				x.user_id = result.insertId;
 				res.json({status: true, message: 'User Added Successfully',result: x});
 
+
+				var createPreference = 'INSERT into user_selection (??,??,??,??,??) values (?,?,?,?,?)';
+				var newData = ['user_id','username','subscribe_message','subscribe_call','subscribe_mail',x.user_id,req.body.u_fname+'_'+req.body.u_lname,1,1,1];
+				createPreference = mysql.format(createPreference,newData);
+				//console.log(createPreference);
+				connection.query(createPreference,function(error,updated){console.log(updated)});
 			});
 		}else{
 			res.json({status: false,message: 'User Already Exist',result: results[0]});
@@ -162,8 +168,9 @@ router.get('/userenquiries/:userid', function(req,res){
 
 router.get('/userinfo/:usrid', function(req,res){
 	console.log(req.params.usrid);
-	var usrQry = 'SELECT * from user_registration WHERE ??=?';
-	var usrData = ['user_id',req.params.usrid];
+	//var usrQry = 'SELECT * from user_registration WHERE ??=?';
+	var usrQry = 'SELECT * FROM user_registration ureg, user_selection uselect where ureg.user_id = uselect.user_id AND ??=?';
+	var usrData = ['ureg.user_id',req.params.usrid];
 	usrQry = mysql.format(usrQry,usrData);
 	console.log(usrQry);
 	connection.query(usrQry,function(err,results){
@@ -191,5 +198,7 @@ router.get('/usermessage/:transactionId', function(req,res){
 		}
 	});
 });
+
+
 
 module.exports = router;
