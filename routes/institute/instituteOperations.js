@@ -287,8 +287,8 @@ router.post('/updateInstituteBasicInfo', function(req,res){
 		var updateData;
 		if(results.length==1){
 			if(req.body.hasOwnProperty('inst_about')){
-				updateQry = 'UPDATE institute_registration SET ??=?, ??=? WHERE ??=?';
-				updateData = ['inst_about',req.body.inst_about,'inst_desc',req.body.inst_desc,'id',req.body.instid];
+				updateQry = 'UPDATE institute_registration SET ??=?, ??=?, ??=?,??=?,??=?,??=?,??=? WHERE ??=?';
+				updateData = ['inst_about',req.body.inst_about,'inst_desc',req.body.inst_desc, 'inst_contact',req.body.inst_contact,'inst_altcontact',req.body.inst_altcontact,'inst_email',req.body.inst_email,'inst_founder',req.body.inst_founder,'inst_founded_date',req.body.inst_founded_date, 'id',req.body.instid];
 				updateQry = mysql.format(updateQry, updateData);
 			} else {
 				updateQry = 'UPDATE institute_registration SET ??=?,??=?,??=?,??=?,??=? WHERE ??=?';
