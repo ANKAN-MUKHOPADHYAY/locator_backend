@@ -199,6 +199,76 @@ router.get('/usermessage/:transactionId', function(req,res){
 	});
 });
 
+/*	Update Username   */
+router.put('/updateusername', function(req,res){
+	var usrQry = 'SELECT * from user_selection WHERE ??=?';
+	var usrData = ['user_id',req.body.uid];
+	usrQry = mysql.format(usrQry,usrData);
+	console.log(usrQry);
+	connection.query(usrQry,function(err,results){
+		console.log(results);
+		if(results.length>=1){
+			var updateQry = 'UPDATE user_selection SET ??=? WHERE ??=?';
+			var updateData = ['username',req.body.username,'user_id',req.body.uid];
+			updateQry = mysql.format(updateQry,updateData);
+			console.log(updateQry);
+			connection.query(updateQry,function(er,resp){
+				if(results.length>=1){
+					res.json({status:true, result: "Updated Successfully"})
+				}
+			});
+		}else{
+			res.json({status:false, result: "User doesn't exist"});
+		}
+	});
+});
+
+router.put('/updateuserpreference', function(req,res){
+	var usrQry = 'SELECT * from user_selection WHERE ??=?';
+	var usrData = ['user_id',req.body.uid];
+	usrQry = mysql.format(usrQry,usrData);
+	console.log(usrQry);
+	connection.query(usrQry,function(err,results){
+		console.log(results);
+		if(results.length>=1){
+			var updateQry = 'UPDATE user_selection SET ??=?,??=?,??=? WHERE ??=?';
+			var updateData = ['subscribe_message',req.body.msg,'subscribe_call',req.body.call,'subscribe_mail',req.body.mail,'user_id',req.body.uid];
+			updateQry = mysql.format(updateQry,updateData);
+			console.log(updateQry);
+			connection.query(updateQry,function(er,resp){
+				if(results.length>=1){
+					res.json({status:true, result: "Updated Successfully"})
+				}
+			});
+		}else{
+			res.json({status:false, result: "User doesn't exist"});
+		}
+	});
+});
+
+router.put('/updatepassword', function(req,res){
+	var usrQry = 'SELECT * from user_registration WHERE ??=? AND ??=?';
+	var usrData = ['user_id',req.body.uid,'user_pwd',md5(req.body.u_old_pwd)];
+	usrQry = mysql.format(usrQry,usrData);
+	console.log(usrQry);
+	connection.query(usrQry,function(err,results){
+		console.log(results);
+		if(results.length>=1){
+			var updateQry = 'UPDATE user_registration SET ??=? WHERE ??=?';
+			var updateData = ['user_pwd',md5(req.body.u_new_pwd),'user_id',req.body.uid];
+			updateQry = mysql.format(updateQry,updateData);
+			console.log(updateQry);
+			connection.query(updateQry,function(er,resp){
+				if(results.length>=1){
+					res.json({status:true, result: "Password Updated Successfully"})
+				}
+			});
+		}else{
+			res.json({status:false, result: "User information doesn't match. Kindly re verify"});
+		}
+	});
+});
+
 
 
 module.exports = router;
