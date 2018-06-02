@@ -153,7 +153,7 @@ router.get('/usertransaction', function(req,res){
 
 router.get('/userenquiries/:userid', function(req,res){
 	console.log(req.params.userid);
-	var enuryQry = 'SELECT id as enquiry_id from user_enquiry WHERE ??=? ORDER BY datetime DESC';
+	var enuryQry = 'SELECT id as enquiry_id, batch as batch from user_enquiry WHERE ??=? ORDER BY datetime DESC';
 	var enuryData = ['user_id',req.params.userid];
 	enuryQry = mysql.format(enuryQry,enuryData);
 	console.log(enuryQry);
@@ -267,6 +267,31 @@ router.put('/updatepassword', function(req,res){
 			res.json({status:false, result: "User information doesn't match. Kindly re verify"});
 		}
 	});
+});
+
+router.get('/oldenquiryinfo/:val', function(req,res){
+	var usrQry = 'SELECT * from user_enquiry WHERE ??=?';
+	var usrData = ['user_id',req.params.val];
+	usrQry = mysql.format(usrQry,usrData);
+	console.log(usrQry);
+	connection.query(usrQry,function(err,results){
+		if(results.length>=1){
+			var Qry = 'SELECT r.user_id, c.id as course_id, c.course_image, c.course_id as course_sub_id, c.course_name, l.location_id, l.location_name, l.location_relevant_name,l.location_city,l.location_state, l.location_pincode,l.location_nearby, r.id as enquiry_id, r.batch as batch, cast(r.datetime as Date) as datetime from user_enquiry r , offered_courses c, offered_locations l where c.id = r.course_id AND l.id=r.location_id AND r.user_id=? order by r.datetime asc';
+			var Data = [req.params.val];
+			Qry = mysql.format(Qry,Data);
+
+			connection.query(Qry,function(er,resp){
+				if(results.length>=1){
+					res.json({status:true, result: resp});
+				} else {
+					 res.json({status:false, result: "Issue with your User Account"});
+				}
+			});
+		} else {
+			res.json({status:false, result: "There is no enquiry made by you before kindly go ahead and create some."});
+		}
+	});
+
 });
 
 
