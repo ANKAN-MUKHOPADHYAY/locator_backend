@@ -7,7 +7,7 @@ var router = express.Router();
 
 /* GET home page. */
 router.get('/allcourses', function(req, res, next) {
-  	var searchQry = 'SELECT * from offered_courses';
+  	var searchQry = 'SELECT * from OFFERED_COURSES';
 	connection.query(searchQry,function(err,results){
 		if(results.length>=1){
 			res.json({status:true, response: results});
@@ -31,15 +31,15 @@ router.get('/alllocation', function(req, res, next) {
 router.get('/searchcourses/:course', function(req,res){
 	console.log(req.params.course);
 	var x =  '%'+req.params.course+'%';
-	var searchQry = 'SELECT * from offered_courses where ?? like ?';
-	var searchQryData = ['course_name',x];
+	var searchQry = 'SELECT * from OFFERED_COURSES where ?? like ?';
+	var searchQryData = ['LOC_COURSE_NAME',x];
 	searchQry = mysql.format(searchQry,searchQryData);
 	console.log(searchQry);
 	connection.query(searchQry,function(err,results){
 		if(results.length>=1){
 			res.json({status:true, response: results});
 		}else{
-			res.json({status:false, response: "Coure Not Found"});
+			res.json({status:false, response: "Course Not Found"});
 		}
 	});
 });
@@ -47,10 +47,10 @@ router.get('/searchcourses/:course', function(req,res){
 router.get('/searchlocations/:location', function(req,res){
 	//console.log(req.params.course);
 	var x =  '%'+req.params.location+'%';
-	var searchQry = 'SELECT * from offered_locations where ?? like ? or ??=? or ?? like ? ';
-	var searchQryData = ['location_name',x, 'location_pincode',req.params.location, 'location_nearby',x];
+	var searchQry = 'SELECT * from OFFERED_LOCATIONS where ?? like ? or ??=? or ?? like ? ';
+	var searchQryData = ['LOC_LOCATION_NAME',x, 'LOC_LOCATION_PINCODE',req.params.location, 'LOC_LOCATION_RELEVANCE_NAME',x];
 	searchQry = mysql.format(searchQry,searchQryData);
-	//console.log(searchQry);
+	console.log(searchQry);
 	connection.query(searchQry,function(err,results){
 		if(results.length>=1){
 			res.json({status:true, response: results});

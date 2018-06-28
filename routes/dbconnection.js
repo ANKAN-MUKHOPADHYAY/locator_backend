@@ -3,7 +3,7 @@ var connection = mysql.createConnection({
   host     : 'localhost',
   user     : 'root',
   password : '',
-  database : 'techninzaz_locator'
+  database : 'LOCATOR_APP'
 });
 
 connection.connect(function(err) {

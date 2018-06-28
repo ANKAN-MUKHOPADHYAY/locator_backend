@@ -6,16 +6,16 @@ var md5 = require('md5');
 
 router.post('/addinstitute', function(req,res){
 	//console.log("you are here");
-	var chkQry = "SELECT * FROM institute_registration WHERE ??=? OR ??=? OR ??=?";
-	var cheQryData = ['inst_name',req.body.i_name,'inst_contact',req.body.i_contact,'inst_email',req.body.i_email];
+	var chkQry = "SELECT * FROM INSTITUTE_REGISTRATION WHERE ??=? OR ??=? OR ??=?";
+	var cheQryData = ['LOC_INST_NAME',req.body.i_name,'LOC_INST_CONTACT',req.body.i_contact,'LOC_INST_EMAIL',req.body.i_email];
 	chkQry = mysql.format(chkQry,cheQryData);
 	//console.log(chkQry);
 	connection.query(chkQry,function(errr,results){
 		if(results.length<1){
-			var query = 'INSERT into institute_registration (??,??,??,??,??,??,??,??) values (?,?,?,?,?,?,?,?)';
-			var data = ['inst_name','inst_address','inst_city','inst_contact','inst_altcontact','inst_email','inst_password','inst_images',req.body.i_name,req.body.i_address,req.body.i_city,req.body.i_contact,req.body.i_altcontact,req.body.i_email,md5(req.body.i_password),req.body.i_images];
+			var query = 'INSERT into INSTITUTE_REGISTRATION (??,??,??,??,??,??,??,??) values (?,?,?,?,?,?,?,?)';
+			var data = ['LOC_INST_NAME','LOC_INST_ADDRESS','LOC_INST_CITY','LOC_INST_CONTACT','LOC_INST_ALTCONTACT','LOC_INST_EMAIL', 'LOC_INST_PWD', 'LOC_INST_IMG', req.body.i_name, req.body.i_address,req.body.i_city, req.body.i_contact,req.body.i_altcontact, req.body.i_email,md5(req.body.i_password), req.body.i_images];
 			query = mysql.format(query,data);
-			console.log(query);
+			//console.log(query);
 			connection.query(query,function(err,result){
 				//console.log(result);
 				var x = {};
@@ -30,17 +30,17 @@ router.post('/addinstitute', function(req,res){
 });
 
 router.post('/updatelc', function(req,res){
-	var chkQry = "SELECT * FROM institute_registration WHERE ??=?";
-	var cheQryData = ['id',req.body.i_id];
+	var chkQry = "SELECT * FROM INSTITUTE_REGISTRATION WHERE ??=?";
+	var cheQryData = ['LOC_INST_ID',req.body.i_id];
 	chkQry = mysql.format(chkQry,cheQryData);
-	console.log(chkQry);
+	//console.log(chkQry);
 	connection.query(chkQry,function(errr,results){
 		if(results.length==1 && (req.body.i_type=='location' || req.body.i_type=='course')){
-			var query = 'update institute_registration set ??=? where ??=?';
+			var query = 'update INSTITUTE_REGISTRATION set ??=? where ??=?';
 			if(req.body.i_type=='location'){
-				var data = ['inst_prefer_locations',req.body.i_lc,'id',req.body.i_id];
+				var data = ['LOC_INST_OFFER_LOCATION',req.body.i_lc,'LOC_INST_ID',req.body.i_id];
 			}else{
-				var data = ['inst_off_courses',req.body.i_lc,'id',req.body.i_id];
+				var data = ['LOC_INST_OFFER_COURSE',req.body.i_lc,'LOC_INST_ID',req.body.i_id];
 			}
 
 			query = mysql.format(query,data);
@@ -59,14 +59,15 @@ router.post('/updatelc', function(req,res){
 });
 
 router.get('/searchstudents/:cid/:lid', function(req,res){
-	var searchQry = 'SELECT * from user_enquiry where ??=? AND ?? = ?';
-	var searchQryData = ['course_id',req.params.cid, 'location_id', req.params.lid];
+	var searchQry = 'SELECT * from USER_ENQUIRY where ??=? AND ?? = ?';
+	var searchQryData = ['LOC_SELECTED_COURSE',req.params.cid, 'LOC_SELECTED_LOCATION', req.params.lid];
 	searchQry = mysql.format(searchQry,searchQryData);
+	//console.log(searchQry)
 	connection.query(searchQry,function(err,results){
-		//console.log(results);
+		console.log(results);
 		if(results.length>=1){
-			var query1 = "SELECT et.enq_id, GROUP_CONCAT(DISTINCT et.inst_id) as institute_received, loc.location_name, loc.id as location_id, loc.location_city, loc.location_state,course.course_name, course.id as course_id, ue.user_id, ur.user_first_name, ur.user_last_name, ur.user_mobile_number, ur.user_altmobile_number, ur.user_email, ur.user_type, ue.course_id, ue.datetime, ue.location_id FROM user_enquiry ue, enquiry_trans et, user_registration ur, offered_locations loc, offered_courses course WHERE ?? = ?? AND ?? = ? AND ?? = ? AND ?? = ?? GROUP BY ue.user_id";
-			var query1Data = ["ue.id", "et.enq_id", "ue.course_id", req.params.cid, "ue.location_id", req.params.lid, "ue.user_id", "ur.user_id"];
+			var query1 = "SELECT et.LOC_ENQ_ID, GROUP_CONCAT(DISTINCT et.LOC_INST_ID) as institute_received, loc.LOC_LOCATION_NAME, loc.LOC_LOCATION_ID, loc.LOC_LOCATION_CITY, loc.LOC_LOCATION_STATE, course.LOC_COURSE_NAME, course.LOC_COURSE_ID, ue.LOC_USER_ID, ur.LOC_USER_FNAME, ur.LOC_USER_LNAME, ur.LOC_USER_MOBILE, ur.LOC_USER_ALT_CONTACT, ur.LOC_USER_EMAIL, ur.LOC_USER_TYPE, ue.LOC_SELECTED_COURSE, ue.LOC_ENQ_CREATE_TIME, ue.LOC_SELECTED_LOCATION FROM USER_ENQUIRY ue, ENQUIRY_TRANX et, USER_REGISTRATION ur, OFFERED_LOCATIONS loc, OFFERED_COURSES course WHERE ?? = ?? AND ?? = ? AND ?? = ? AND ?? = ?? GROUP BY ue.LOC_USER_ID";
+			var query1Data = ["ue.LOC_ENQ_ID", "et.LOC_ENQ_ID", "ue.LOC_SELECTED_COURSE", req.params.cid, "ue.LOC_SELECTED_LOCATION", req.params.lid, "ue.LOC_USER_ID", "ur.LOC_USER_ID"];
 			query1 = mysql.format(query1, query1Data);
 			console.log('----------');
 			console.log(query1);
@@ -74,17 +75,11 @@ router.get('/searchstudents/:cid/:lid', function(req,res){
 				if(e) {
 					res.json({status: false, response: e});
 				} else {
-					/*r.forEach(function(i,k){
-						var queryCourse = "SELECT * FROM offered_locations WHERE ?? = ?";
-						var queryCourseData = ['id', i.course_id];
-						queryCourse = mysql.format(queryCourseData);
-						connection.query(queryCourse, function(eC, rC){
-							console.log('-----------');
-							console.log(rC);
-							//r[i].CourseInfoDetail = rC;
-							//console.log(r[i]);
-						});
-					});*/
+					r.forEach(function(i,k){
+						//console.log(sessionStorage.getItem('logged_in'));
+						//console.log;
+						console.log(i.LOC_USER_MOBILE);
+					});
 					res.json({status: true, response: r});
 				}
 			});
@@ -96,8 +91,8 @@ router.get('/searchstudents/:cid/:lid', function(req,res){
 
 router.post('/loginInstitute', function(req,res){
 	//console.log("you are here");
-	var chkQry = "SELECT * FROM institute_registration WHERE ??=? OR ??=? AND ??=?";
-	var cheQryData = ['inst_contact',req.body.i_loginparams,'inst_email',req.body.i_loginparams,'inst_password',md5(req.body.i_password)];
+	var chkQry = "SELECT * FROM INSTITUTE_REGISTRATION WHERE ??=? OR ??=? AND ??=?";
+	var cheQryData = ['LOC_INST_CONTACT',req.body.i_loginparams,'LOC_INST_EMAIL',req.body.i_loginparams,'LOC_INST_PWD',md5(req.body.i_password)];
 	chkQry = mysql.format(chkQry,cheQryData);
 	//console.log(chkQry);
 	connection.query(chkQry,function(errr,results){
@@ -121,24 +116,24 @@ router.get('/receivedleads/:type/:instid', function(req,res){
 	var searchQryData;
 
 	if(req.params.type=='enquiry'){
-		col = "inst_enquired";
-		searchQry = "SELECT r.user_id as userid, t.tranx_id as transactionid, t.enq_id as enquiryid, t.inst_message as message, r.user_first_name as firstname,r.user_last_name as lastname,r.user_mobile_number as mobile, r.user_email as email,r.user_type as usertype, c.course_id as courseid, c.course_name as coursename, l.location_id, l.location_name,l.location_relevant_name,l.location_city,l.location_state, l.location_pincode,l.location_nearby from enquiry_trans t, user_enquiry e, user_registration r , offered_courses c, offered_locations l where t.enq_id = e.id AND e.user_id = r.user_id AND e.course_id=c.id AND e.location_id=l.id AND ?? = ? AND ??=? AND ??=? AND ??=? order by e.datetime desc";
-		searchQryData = ['inst_id',req.params.instid,col,1,'inst_contacted',0,'inst_student',0];
+		col = "LOC_INST_ENQUIRED";
+		searchQry = "SELECT r.LOC_USER_ID as userid, t.LOC_TRANX_ID as transactionid, t.LOC_ENQ_ID as enquiryid, t.LOC_INST_MESSAGE as message, r.LOC_USER_FNAME as firstname,r.LOC_USER_LNAME as lastname,r.LOC_USER_MOBILE as mobile, r.LOC_USER_EMAIL as email,r.LOC_USER_TYPE as usertype, c.LOC_COURSE_ID as courseid, c.LOC_COURSE_NAME as coursename, l.LOC_LOCATION_ID, l.LOC_LOCATION_NAME,l.LOC_LOCATION_RELEVANCE_NAME,l.LOC_LOCATION_CITY,l.LOC_LOCATION_STATE, l.LOC_LOCATION_PINCODE from ENQUIRY_TRANX t, USER_ENQUIRY e, USER_REGISTRATION r , OFFERED_COURSES c, OFFERED_LOCATIONS l where t.LOC_ENQ_ID = e.LOC_ENQ_ID AND e.LOC_USER_ID = r.LOC_USER_ID AND e.LOC_SELECTED_COURSE=c.LOC_COURSE_ID AND e.LOC_SELECTED_LOCATION=l.LOC_LOCATION_ID AND ?? = ? AND ??=? AND ??=? AND ??=? order by e.LOC_ENQ_CREATE_TIME	 desc";
+		searchQryData = ['LOC_INST_ID',req.params.instid,col,1,'LOC_INST_CONTACTED',0,'LOC_INST_STUDENT',0];
 	}else if(req.params.type=='contact'){
-		col = "inst_contacted";
-		searchQry = "SELECT r.user_id as userid, t.tranx_id as transactionid, t.enq_id as enquiryid, t.inst_message as message, r.user_first_name as firstname,r.user_last_name as lastname,r.user_mobile_number as mobile, r.user_email as email,r.user_type as usertype, c.course_id as courseid, c.course_name as coursename, l.location_id, l.location_name,l.location_relevant_name,l.location_city,l.location_state, l.location_pincode,l.location_nearby from enquiry_trans t, user_enquiry e, user_registration r , offered_courses c, offered_locations l where t.enq_id = e.id AND e.user_id = r.user_id AND e.course_id=c.id AND e.location_id=l.id AND ?? = ? AND ??=? AND ??=? order by e.datetime desc"
-		searchQryData = ['inst_id',req.params.instid,'inst_contacted',1,'inst_student',0];
+		col = "LOC_INST_CONTACTED";
+		searchQry = "SELECT r.LOC_USER_ID as userid, t.LOC_TRANX_ID as transactionid, t.LOC_ENQ_ID as enquiryid, t.LOC_INST_MESSAGE as message, r.LOC_USER_FNAME as firstname,r.LOC_USER_LNAME as lastname,r.LOC_USER_MOBILE as mobile, r.LOC_USER_EMAIL as email,r.LOC_USER_TYPE as usertype, c.LOC_COURSE_ID as courseid, c.LOC_COURSE_NAME as coursename, l.LOC_LOCATION_ID, l.LOC_LOCATION_NAME,l.LOC_LOCATION_RELEVANCE_NAME,l.LOC_LOCATION_CITY,l.LOC_LOCATION_STATE, l.LOC_LOCATION_PINCODE from ENQUIRY_TRANX t, USER_ENQUIRY e, USER_REGISTRATION r , OFFERED_COURSES c, OFFERED_LOCATIONS l where t.LOC_ENQ_ID = e.LOC_ENQ_ID AND e.LOC_USER_ID = r.LOC_USER_ID AND e.LOC_SELECTED_COURSE=c.LOC_COURSE_ID AND e.LOC_SELECTED_LOCATION=l.LOC_LOCATION_ID AND ?? = ? AND ??=? AND ??=? order by e.LOC_ENQ_CREATE_TIME	 desc"
+		searchQryData = ['LOC_INST_ID',req.params.instid,'LOC_INST_CONTACTED',1,'LOC_INST_STUDENT',0];
 	}else if(req.params.type=='student'){
-		col = "inst_student";
-		searchQry = "SELECT r.user_id as userid, t.tranx_id as transactionid, t.enq_id as enquiryid, t.inst_message as message, r.user_first_name as firstname,r.user_last_name as lastname,r.user_mobile_number as mobile, r.user_email as email,r.user_type as usertype, c.course_id as courseid, c.course_name as coursename, l.location_id, l.location_name,l.location_relevant_name,l.location_city,l.location_state, l.location_pincode,l.location_nearby from enquiry_trans t, user_enquiry e, user_registration r , offered_courses c, offered_locations l where t.enq_id = e.id AND e.user_id = r.user_id AND e.course_id=c.id AND e.location_id=l.id AND ?? = ? AND ??=? order by e.datetime desc"
-		searchQryData = ['inst_id',req.params.instid,'inst_student',1];
+		col = "LOC_INST_STUDENT";
+		searchQry = "SELECT r.LOC_USER_ID as userid, t.LOC_TRANX_ID as transactionid, t.LOC_ENQ_ID as enquiryid, t.LOC_INST_MESSAGE as message, r.LOC_USER_FNAME as firstname,r.LOC_USER_LNAME as lastname,r.LOC_USER_MOBILE as mobile, r.LOC_USER_EMAIL as email,r.LOC_USER_TYPE as usertype, c.LOC_COURSE_ID as courseid, c.LOC_COURSE_NAME as coursename, l.LOC_LOCATION_ID, l.LOC_LOCATION_NAME,l.LOC_LOCATION_RELEVANCE_NAME,l.LOC_LOCATION_CITY,l.LOC_LOCATION_STATE, l.LOC_LOCATION_PINCODE from ENQUIRY_TRANX t, USER_ENQUIRY e, USER_REGISTRATION r , OFFERED_COURSES c, OFFERED_LOCATIONS l where t.LOC_ENQ_ID = e.LOC_ENQ_ID AND e.LOC_USER_ID = r.LOC_USER_ID AND e.LOC_SELECTED_COURSE=c.LOC_COURSE_ID AND e.LOC_SELECTED_LOCATION=l.LOC_LOCATION_ID AND ?? = ? AND ??=? order by e.LOC_ENQ_CREATE_TIME	 desc"
+		searchQryData = ['LOC_INST_ID',req.params.instid,'LOC_INST_STUDENT',1];
 	}else{
 		res.json({status:false, response: "Wrong "+type+" value"});
 	}
 
 	//searchQryData = ['inst_id',req.params.instid,col,1];
 	searchQry = mysql.format(searchQry,searchQryData);
-	console.log(searchQry);
+	//console.log(searchQry);
 	connection.query(searchQry,function(err,results){
 		//console.log(results);
 		if(results.length>=1){
@@ -152,28 +147,28 @@ router.get('/receivedleads/:type/:instid', function(req,res){
 
 router.post('/updateleadstatus/', function(req,res){
 
-	var chkQry = "SELECT * FROM enquiry_trans WHERE ??=? AND ?? = ?";
+	var chkQry = "SELECT * FROM ENQUIRY_TRANX WHERE ??=? AND ?? = ?";
 
 	if(req.body.type=='enquiry'){
-		col = "inst_enquired";
-		console.log(col);
+		col = "LOC_INST_ENQUIRED";
+		//console.log(col);
 	}else if(req.body.type=='contact'){
-		col = "inst_contacted";
+		col = "LOC_INST_CONTACTED";
 	}else if(req.body.type=='student'){
-		col = "inst_student";
+		col = "LOC_INST_STUDENT";
 	}else{
 		res.json({status:false, response: "Wrong "+type+" value"});
 	}
-	var cheQryData = ['tranx_id',req.body.trans_id,col,0];
+	var cheQryData = ['LOC_TRANX_ID',req.body.trans_id,col,0];
 	chkQry = mysql.format(chkQry,cheQryData);
-	console.log(chkQry);
+	//console.log(chkQry);
 	connection.query(chkQry,function(errr,results){
 		if(results.length==1){
 
-			var query = 'update enquiry_trans set ??=? where ??=?';
-			var data = [col,1,'tranx_id',req.body.trans_id];
+			var query = 'update ENQUIRY_TRANX set ??=? where ??=?';
+			var data = [col,1,'LOC_TRANX_ID',req.body.trans_id];
 			query = mysql.format(query,data);
-			console.log(query);
+			//console.log(query);
 			//console.log(query);
 			connection.query(query,function(err,result){
 				//console.log(result);
@@ -187,22 +182,22 @@ router.post('/updateleadstatus/', function(req,res){
 });
 
 router.post('/sendMessage', function(req,res){
-	var chkQry = "SELECT * FROM enquiry_trans WHERE ??=?";
-	var cheQryData = ['tranx_id',req.body.transactionid];
+	var chkQry = "SELECT * FROM ENQUIRY_TRANX WHERE ??=?";
+	var cheQryData = ['LOC_TRANX_ID',req.body.transactionid];
 	chkQry = mysql.format(chkQry,cheQryData);
 	//console.log(chkQry);
 	connection.query(chkQry,function(errr,results){
 		if(results.length==1){
-			var query = 'update enquiry_trans set ??=? where ??=?';
+			var query = 'update ENQUIRY_TRANX set ??=? where ??=?';
 			var	data;
-			if(results[0].inst_message == null){
+			if(results[0].LOC_INST_MESSAGE == null){
 				var newMsg =  [];
 				newMsg.push(req.body.message);
-				data = ['inst_message',JSON.stringify(newMsg),'tranx_id',req.body.transactionid];
+				data = ['LOC_INST_MESSAGE',JSON.stringify(newMsg),'LOC_TRANX_ID',req.body.transactionid];
 			} else {
-				var existingMsg = JSON.parse(results[0].inst_message);
+				var existingMsg = JSON.parse(results[0].LOC_INST_MESSAGE);
 				existingMsg.push(req.body.message);
-				data = ['inst_message',JSON.stringify(existingMsg),'tranx_id',req.body.transactionid];
+				data = ['LOC_INST_MESSAGE',JSON.stringify(existingMsg),'LOC_TRANX_ID',req.body.transactionid];
 			}
 			query = mysql.format(query,data);
 			//console.log(query);
@@ -216,18 +211,18 @@ router.post('/sendMessage', function(req,res){
 });
 
 router.post('/offerings',function(req,res){
-	var chkQry = "SELECT * FROM institute_registration WHERE ??=?";
-	var cheQryData = ['id',req.body.i_id];
+	var chkQry = "SELECT * FROM INSTITUTE_REGISTRATION WHERE ??=?";
+	var cheQryData = ['LOC_INST_ID',req.body.i_id];
 	chkQry = mysql.format(chkQry,cheQryData);
-	console.log(chkQry);
+	//console.log(chkQry);
 	connection.query(chkQry,function(errr,results){
 		var query;
 		var query1Data;
 		if(results.length==1 && req.body.i_type=='course'){
-			query = 'SELECT b.*, "true" as opted FROM institute_registration a INNER JOIN offered_courses b ON FIND_IN_SET(b.id, a.inst_off_courses) > 0 WHERE a.id=?';
+			query = 'SELECT b.*, "true" as opted FROM INSTITUTE_REGISTRATION a INNER JOIN OFFERED_COURSES b ON FIND_IN_SET(b.LOC_COURSE_ID, a.LOC_INST_OFFER_COURSE) > 0 WHERE a.LOC_INST_ID=?';
 			query1Data = [req.body.i_id];
 		} else if(results.length==1 && req.body.i_type=='location'){
-			query = 'SELECT b.*, "true" as opted FROM institute_registration a INNER JOIN offered_locations b ON FIND_IN_SET(b.id, a.inst_prefer_locations) > 0 WHERE a.id=?';
+			query = 'SELECT b.*, "true" as opted FROM INSTITUTE_REGISTRATION a INNER JOIN OFFERED_LOCATIONS b ON FIND_IN_SET(b.LOC_LOCATION_ID, a.LOC_INST_OFFER_LOCATION) > 0 WHERE a.LOC_INST_ID=?';
 			query1Data = [req.body.i_id];
 		} else {
 			res.json({status: false,message: 'There is some problem'});
@@ -242,25 +237,25 @@ router.post('/offerings',function(req,res){
 
 
 router.get('/getInstituteInformation/:instid', function(req,res){
-	var chkQry = "SELECT * FROM institute_registration WHERE ??=?";
-	var cheQryData = ['id',req.params.instid];
+	var chkQry = "SELECT * FROM INSTITUTE_REGISTRATION WHERE ??=?";
+	var cheQryData = ['LOC_INST_ID',req.params.instid];
 	chkQry = mysql.format(chkQry,cheQryData);
 	connection.query(chkQry,function(errr,results){
-		console.log(results);
+		//console.log(results);
 		var locationQry,courseQry;
 		var locquery1Data,coursequery1Data;
 		if(results.length==1){
-			courseQry = 'SELECT b.*, "true" as opted FROM institute_registration a INNER JOIN offered_courses b ON FIND_IN_SET(b.id, a.inst_off_courses) > 0 WHERE a.id=?';
+			courseQry = 'SELECT b.*, "true" as opted FROM INSTITUTE_REGISTRATION a INNER JOIN OFFERED_COURSES b ON FIND_IN_SET(b.LOC_COURSE_ID, a.LOC_INST_OFFER_COURSE) > 0 WHERE a.LOC_INST_ID=?';
 			coursequery1Data = [req.params.instid];
 
-			locationQry = 'SELECT b.*, "true" as opted FROM institute_registration a INNER JOIN offered_locations b ON FIND_IN_SET(b.id, a.inst_prefer_locations) > 0 WHERE a.id=?';
+			locationQry = 'SELECT b.*, "true" as opted FROM INSTITUTE_REGISTRATION a INNER JOIN OFFERED_LOCATIONS b ON FIND_IN_SET(b.LOC_LOCATION_ID, a.LOC_INST_OFFER_LOCATION) > 0 WHERE a.LOC_INST_ID=?';
 			locquery1Data = [req.params.instid];
 
 			courseQry = mysql.format(courseQry, coursequery1Data);
 			connection.query(courseQry,function(er,result){
-				delete results[0].inst_off_courses;
-				delete results[0].inst_prefer_locations;
-				delete results[0].inst_password;
+				delete results[0].LOC_INST_OFFER_COURSE;
+				delete results[0].LOC_INST_OFFER_LOCATION;
+				delete results[0].LOC_INST_PWD;
 
 				locationQry = mysql.format(locationQry, locquery1Data);
 				connection.query(locationQry,function(e,resp){
@@ -277,22 +272,26 @@ router.get('/getInstituteInformation/:instid', function(req,res){
 });
 
 router.post('/updateInstituteBasicInfo', function(req,res){
-	var chkQry = "SELECT * FROM institute_registration WHERE ??=?";
-	var cheQryData = ['id',req.body.instid];
+	var chkQry = "SELECT * FROM INSTITUTE_REGISTRATION WHERE ??=?";
+	var cheQryData = ['LOC_INST_ID',req.body.instid];
 	chkQry = mysql.format(chkQry,cheQryData);
-	console.log()
+	//console.log()
 	connection.query(chkQry,function(errr,results){
-		console.log(results);
+		//console.log(results);
 		var updateQry;
 		var updateData;
+		//var str = str.replace(/(?:\r\n|\r|\n)/g, '<br>');
+		var inst_about = req.body.LOC_INST_ABOUT.split("\n").join("<br />");
+		var inst_desc = req.body.LOC_INST_DESC.split("\n").join("<br />");
+		console.log(inst_about);
 		if(results.length==1){
-			if(req.body.hasOwnProperty('inst_about')){
-				updateQry = 'UPDATE institute_registration SET ??=?, ??=?, ??=?,??=?,??=?,??=?,??=? WHERE ??=?';
-				updateData = ['inst_about',req.body.inst_about,'inst_desc',req.body.inst_desc, 'inst_contact',req.body.inst_contact,'inst_altcontact',req.body.inst_altcontact,'inst_email',req.body.inst_email,'inst_founder',req.body.inst_founder,'inst_founded_date',req.body.inst_founded_date, 'id',req.body.instid];
+			if(req.body.hasOwnProperty('LOC_INST_ABOUT')){
+				updateQry = 'UPDATE INSTITUTE_REGISTRATION SET ??=?, ??=?, ??=?,??=?,??=?,??=?,??=? WHERE ??=?';
+				updateData = ['LOC_INST_ABOUT',inst_about,'LOC_INST_DESC',inst_desc, 'LOC_INST_CONTACT',req.body.LOC_INST_CONTACT, 'LOC_INST_ALTCONTACT',req.body.LOC_INST_ALTCONTACT,'LOC_INST_EMAIL',req.body.LOC_INST_EMAIL,'LOC_INST_FOUNDER',req.body.LOC_INST_FOUNDER,'LOC_INST_FOUND_DATE', req.body.LOC_INST_FOUND_DATE, 'LOC_INST_ID',req.body.LOC_INST_ID];
 				updateQry = mysql.format(updateQry, updateData);
 			} else {
-				updateQry = 'UPDATE institute_registration SET ??=?,??=?,??=?,??=?,??=? WHERE ??=?';
-				updateData = ['inst_contact',req.body.inst_contact,'inst_altcontact',req.body.inst_altcontact,'inst_email',req.body.inst_email,'inst_founder',req.body.inst_founder,'inst_founded_date',req.body.inst_founded_date,'id', req.body.instid];
+				updateQry = 'UPDATE INSTITUTE_REGISTRATION SET ??=?,??=?,??=?,??=?,??=? WHERE ??=?';
+				updateData = ['LOC_INST_CONTACT',req.body.LOC_INST_CONTACT,'LOC_INST_ALTCONTACT',req.body.LOC_INST_ALTCONTACT,'LOC_INST_EMAIL', req.body.LOC_INST_EMAIL,'LOC_INST_FOUNDER', req.body.LOC_INST_FOUNDER,'LOC_INST_FOUND_DATE',req.body.LOC_INST_FOUND_DATE,'LOC_INST_ID', req.body.LOC_INST_ID];
 				updateQry = mysql.format(updateQry, updateData);
 			}
 			console.log(updateQry);
