@@ -235,6 +235,17 @@ router.post('/offerings',function(req,res){
 	});
 });
 
+router.get('/recommendedInstitute/:enqid', function(req,res){
+	console.log(req.params.enqid);
+	var chkQry = "SELECT * FROM USER_ENQUIRY WHERE ??=?";
+	var cheQryData = ['LOC_ENQ_ID',req.params.enqid];
+	chkQry = mysql.format(chkQry,cheQryData);
+	connection.query(chkQry,function(errr,results){
+		console.log(results[0].LOC_SELECTED_COURSE);
+		console.log(results[0].LOC_SELECTED_LOCATION);
+		res.json(results[0]);
+	});
+});
 
 router.get('/getInstituteInformation/:instid', function(req,res){
 	var chkQry = "SELECT * FROM INSTITUTE_REGISTRATION WHERE ??=?";
