@@ -24,6 +24,7 @@ router.post('/loginCandidate', function(req,res){
 	});
 });
 
+
 router.post('/adduser', function(req,res){
 	var chkQry = "SELECT * FROM USER_REGISTRATION WHERE ??=? OR ??=? OR ??=?";
 	var cheQryData = ['LOC_USER_MOBILE',req.body.u_mobile,'LOC_USER_EMAIL',req.body.u_email,'LOC_USER_ALT_CONTACT',req.body.u_mobile];
