@@ -6,24 +6,90 @@ var md5 = require('md5');
 
 
 router.post('/loginCandidate', function(req,res){
-	console.log(req.body);
+	//console.log(req.body);
+	if(!req.session.count)
+		req.session.count = 1;
+	 else 
+		req.session.count++;
+
+	
 	var chkQry = "SELECT * FROM USER_REGISTRATION WHERE ??=? OR ??=? AND ??=?";
 	var cheQryData = ['LOC_USER_EMAIL',req.body.i_loginparams,'LOC_USER_MOBILE',req.body.i_loginparams,'LOC_USER_PWD',md5(req.body.i_password)];
 	chkQry = mysql.format(chkQry,cheQryData);
 	//console.log(chkQry);
 	connection.query(chkQry,function(errr,results){
-		console.log(results);
+		//console.log(results);
 		if(results.length>1){
 			res.json({status: false, message: 'User Details exist more than one'});
 		}else if(results.length == 0){
 			res.json({status: false, message: 'User Details doesnot exist'});
 		} else {
 			delete(results[0].LOC_USER_PWD);
+			results[0].platform = req.body.platform;
+			results[0].access_ip = req.body.access_ip;
+			req.session.sessionVal = md5(results[0].LOC_USER_ID+results[0].LOC_USER_FNAME);
+			results[0].session = req.session;
+			console.log(req.session);
+			createAccessLog(results[0]);
 			res.json({status: true,message: 'User Login Successful',result: results[0]});
 		}
 	});
 });
 
+
+function createAccessLog(data){
+	var d = new Date();
+	var month,day;
+	month = d.getMonth()+ 1; if (month < 10) { month = "0" +month; }
+    day = d.getDate(); if (day < 10) { day = "0" + day; }
+	var fullDate = d.getFullYear()+'-'+month+'-'+day;
+	//console.log(data);
+	var checkSession = "SELECT * from ACCESS_LOG WHERE ??=? AND ??=? AND ??=?";
+	var checkData = ['LOC_EMAIL_ID',data.LOC_USER_EMAIL,'LOC_SESSION_ID',data.session.sessionVal,'LOC_ACCESS_DATE',fullDate];
+	checkSession = mysql.format(checkSession,checkData);
+	console.log(checkSession);
+	sqlGetCall(checkSession, function(results){
+		if(results.length > 0){
+			var updateQry = 'UPDATE ACCESS_LOG SET ??=?,??=?,??=? WHERE ??=?';
+			var updateData = ['LOC_ACCESS_SOURCE',data.platform,'LOC_IP_ADDRESS',data.access_ip,'LOC_ATTEMP_COUNT',data.session.count, 'LOC_ACCESS_ID',results[0].LOC_ACCESS_ID];
+			updateQry = mysql.format(updateQry,updateData);
+			sqlGetCall(updateQry, function(result){
+				console.log(result);
+			});
+		} else {
+			var accessQry = "INSERT INTO ACCESS_LOG (??,??,??,??,??,??,`LOC_ACCESS_DATE`) VALUES (?,?,?,?,?,?,NOW())";
+			var accessData = ['LOC_EMAIL_ID','LOC_ACCESS_SOURCE','LOC_IP_ADDRESS','LOC_SESSION_ID','LOC_SESSION_ACTIVE','LOC_ATTEMP_COUNT', data.LOC_USER_EMAIL, data.platform, data.access_ip,data.session.sessionVal,1,data.session.count];
+			accessQry = mysql.format(accessQry,accessData);
+			//console.log(accessQry);
+			sqlGetCall(accessQry, function(result){
+				console.log(result);
+			});
+		}
+	})
+
+	/*connection.query(checkSession,function(errr,results){
+		console.log(results);
+		if(results.length > 0){
+			var updateQry = 'UPDATE ACCESS_LOG SET ??=?,??=?,??=? WHERE ??=?';
+			var updateData = ['LOC_ACCESS_SOURCE',data.platform,'LOC_IP_ADDRESS',data.access_ip,'LOC_ATTEMP_COUNT',data.session.count, 'LOC_ACCESS_ID',results[0].LOC_ACCESS_ID];
+			updateQry = mysql.format(updateQry,updateData);
+			console.log(updateQry)
+			connection.query(updateQry, function(err, result){
+				console.log(result);
+			});
+		} else {
+			var accessQry = "INSERT INTO ACCESS_LOG (??,??,??,??,??,??,`LOC_ACCESS_DATE`) VALUES (?,?,?,?,?,?,NOW())";
+			var accessData = ['LOC_EMAIL_ID','LOC_ACCESS_SOURCE','LOC_IP_ADDRESS','LOC_SESSION_ID','LOC_SESSION_ACTIVE','LOC_ATTEMP_COUNT', data.LOC_USER_EMAIL, data.platform, data.access_ip,data.session.sessionVal,1,data.session.count];
+			accessQry = mysql.format(accessQry,accessData);
+			console.log(accessQry);
+			connection.query(accessQry, function(err, result){
+				console.log(result);
+			});
+		}
+	});*/
+	
+
+}
 
 router.post('/adduser', function(req,res){
 	var chkQry = "SELECT * FROM USER_REGISTRATION WHERE ??=? OR ??=? OR ??=?";
@@ -225,12 +291,28 @@ router.put('/updateusername', function(req,res){
 	});
 });
 
-router.put('/updateuserpreference', function(req,res){
-	var usrQry = 'SELECT * from user_selection WHERE ??=?';
-	var usrData = ['user_id',req.body.uid];
+router.put('/updateUserPreference', function(req,res){
+	var usrQry = 'SELECT * from USER_ADDITIONAL_INFO WHERE ??=?';
+	var usrData = ['LOC_USER_ID',req.body.uid];
 	usrQry = mysql.format(usrQry,usrData);
-	console.log(usrQry);
-	connection.query(usrQry,function(err,results){
+	//console.log(usrQry);
+	sqlGetCall(usrQry, function(results){
+		console.log(results);
+		if(results.length>=1){
+			var updateQry = 'UPDATE USER_ADDITIONAL_INFO SET ??=?,??=?,??=? WHERE ??=?';
+			var updateData = ['LOC_USER_SUB_MSG',req.body.msg,'LOC_USER_SUB_CALL',req.body.call,'LOC_USER_SUB_MAIL',req.body.mail,'LOC_INC_ID',results[0].LOC_INC_ID];
+			updateQry = mysql.format(updateQry,updateData);
+			sqlGetCall(updateQry, function(resp){
+				if(results.length>=1){
+					res.json({status:true, result: "Updated Preferences Successfully"})
+				}
+			});
+		} else {
+			res.json({status:false, result: "User doesn't exist"});
+		}
+	});
+
+	/*connection.query(usrQry,function(err,results){
 		console.log(results);
 		if(results.length>=1){
 			var updateQry = 'UPDATE user_selection SET ??=?,??=?,??=? WHERE ??=?';
@@ -245,7 +327,7 @@ router.put('/updateuserpreference', function(req,res){
 		}else{
 			res.json({status:false, result: "User doesn't exist"});
 		}
-	});
+	});*/
 });
 
 router.put('/updatepassword', function(req,res){
@@ -296,6 +378,39 @@ router.get('/oldenquiryinfo/:val', function(req,res){
 
 });
 
+router.put('/updatePersonalInfo', function(req,res){
+	var usrQry = 'SELECT * from USER_ADDITIONAL_INFO WHERE ??=?';
+	var usrData = ['LOC_USER_ID',req.body.uid];
+	usrQry = mysql.format(usrQry,usrData);
+	sqlGetCall(usrQry, function(results){
+		if(results.length>=1){
+			var updateQry = 'UPDATE USER_ADDITIONAL_INFO SET ??=?,??=?,??=?,??=? WHERE ??=?';
+			var updateData = ['LOC_USER_PERMANENT_ADDRESS',req.body.permanent_address,'LOC_USER_CURRENT_ADDRESS',req.body.current_address,'LOC_USER_CITY',req.body.current_city,'LOC_USER_STATE',req.body.current_state,'LOC_INC_ID',results[0].LOC_INC_ID];
+			updateQry = mysql.format(updateQry,updateData);
+			console.log(updateQry);
+			sqlGetCall(updateQry, function(resp){
+				if(results.length>=1){
+					res.json({status:true, result: "Updated Successfully"})
+				}
+			});
+		} else {
+			res.json({status:false, result: "User doesn't exist"});
+		}
+	});
+});
 
+
+function sqlGetCall(query,callback){
+	if(query){
+		connection.query(query, function(err,res){
+			setTimeout(function() {
+				if(err){
+					callback(err);
+				}
+				callback(res);
+			}, 100);
+		});	
+	}
+}
 
 module.exports = router;

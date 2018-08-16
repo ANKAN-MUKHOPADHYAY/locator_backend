@@ -12,18 +12,31 @@ router.get('/allcourses', function(req, res, next) {
 		if(results.length>=1){
 			res.json({status:true, response: results});
 		}else{
-			res.json({status:false, response: "Coure Not Found"});
+			res.json({status:false, response: "Course Not registered yet. Kindly send the course details to admin@locateit.com"});
 		}
 	});
 });
 
 router.get('/alllocation', function(req, res, next) {
-  	var searchQry = 'SELECT * from offered_locations';
+	var searchQry = 'SELECT * from offered_locations';
 	connection.query(searchQry,function(err,results){
 		if(results.length>=1){
 			res.json({status:true, response: results});
 		}else{
-			res.json({status:false, response: "Coure Not Found"});
+			res.json({status:false, response: "We have not started our business in this location. We are working on the same."});
+		}
+	});
+});
+
+router.get('/alllocation/:city', function(req, res, next) {
+	var searchQry = 'SELECT * from offered_locations where ??=?';
+	var searchData = ['LOC_LOCATION_CITY',req.params.city]; 
+	searchQry = mysql.format(searchQry,searchData); 
+	connection.query(searchQry,function(err,results){
+		if(results.length>=1){
+			res.json({status:true, response: results});
+		}else{
+			res.json({status:false, response: "We have not started our business in this location. We are working on the same."});
 		}
 	});
 });

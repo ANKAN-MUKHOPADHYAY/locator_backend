@@ -18,7 +18,7 @@ router.post('/addnewcourse', function(req,res){
 	connection.query(chkQry, function(errr,results){
 		//console.log(results);
 		if(results.length<1){
-				var query = 'INSERT into OFFERED_COURSES (??,??,??,??) Values (?,?,?,?)';
+				var query = 'INSERT into OFFERED_COURSES (??,??,??,??,??) Values (?,?,?,?,?)';
 				var data = ['LOC_COURSE_NAME','LOC_COURSE_IMAGE','LOC_COURSE_ACTIVE_STATUS','LOC_COURSE_CREATED_BY','LOC_COURSE_PARENT' ,req.body.course_name,req.body.imageurl,req.body.course_status,req.body.createdby, req.body.parentcategory];
 				query = mysql.format(query,data);
 				//console.log(query);

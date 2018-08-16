@@ -91,15 +91,17 @@ router.get('/searchstudents/:cid/:lid', function(req,res){
 
 router.post('/loginInstitute', function(req,res){
 	//console.log("you are here");
-	var chkQry = "SELECT * FROM INSTITUTE_REGISTRATION WHERE ??=? OR ??=? AND ??=?";
+	var chkQry = "SELECT * FROM INSTITUTE_REGISTRATION WHERE (??=? OR ??=?) AND ??=?";
 	var cheQryData = ['LOC_INST_CONTACT',req.body.i_loginparams,'LOC_INST_EMAIL',req.body.i_loginparams,'LOC_INST_PWD',md5(req.body.i_password)];
 	chkQry = mysql.format(chkQry,cheQryData);
-	//console.log(chkQry);
+	console.log(chkQry);
 	connection.query(chkQry,function(errr,results){
 		//console.log(results);
-		if(results.length>1){
+		if(results.length > 1){
 			res.json({status: false, message: 'Institute Details exist more than one'});
-		}else{
+		}else if(results.length < 1){
+			res.json({status: false, message: 'Login information incorrect'});
+		} else {
 			/*delete(results[0].inst_off_courses);
 			delete(results[0].inst_prefer_locations);
 			delete(results[0].inst_password);*/
@@ -292,13 +294,17 @@ router.post('/updateInstituteBasicInfo', function(req,res){
 		var updateQry;
 		var updateData;
 		//var str = str.replace(/(?:\r\n|\r|\n)/g, '<br>');
-		var inst_about = req.body.LOC_INST_ABOUT.split("\n").join("<br />");
-		var inst_desc = req.body.LOC_INST_DESC.split("\n").join("<br />");
+		if(req.body.LOC_INST_ABOUT != null){
+			var inst_about = req.body.LOC_INST_ABOUT.split("\n").join("<br />");
+		} 
+		if(req.body.LOC_INST_DESC != null){
+			var inst_desc = req.body.LOC_INST_DESC.split("\n").join("<br />");
+		} 
 		console.log(inst_about);
 		if(results.length==1){
 			if(req.body.hasOwnProperty('LOC_INST_ABOUT')){
-				updateQry = 'UPDATE INSTITUTE_REGISTRATION SET ??=?, ??=?, ??=?,??=?,??=?,??=?,??=? WHERE ??=?';
-				updateData = ['LOC_INST_ABOUT',inst_about,'LOC_INST_DESC',inst_desc, 'LOC_INST_CONTACT',req.body.LOC_INST_CONTACT, 'LOC_INST_ALTCONTACT',req.body.LOC_INST_ALTCONTACT,'LOC_INST_EMAIL',req.body.LOC_INST_EMAIL,'LOC_INST_FOUNDER',req.body.LOC_INST_FOUNDER,'LOC_INST_FOUND_DATE', req.body.LOC_INST_FOUND_DATE, 'LOC_INST_ID',req.body.LOC_INST_ID];
+				updateQry = 'UPDATE INSTITUTE_REGISTRATION SET ??=?, ??=?, ??=?,??=?, ??=?, ??=?, ??=?, ??=?,??=?,??=?,??=?,??=? WHERE ??=?';
+				updateData = ['LOC_INST_ABOUT',inst_about,'LOC_INST_DESC',inst_desc, 'LOC_INST_CONTACT',req.body.LOC_INST_CONTACT, 'LOC_INST_ALTCONTACT',req.body.LOC_INST_ALTCONTACT,'LOC_INST_EMAIL',req.body.LOC_INST_EMAIL,'LOC_INST_FOUNDER',req.body.LOC_INST_FOUNDER,'LOC_INST_FOUND_DATE', req.body.LOC_INST_FOUND_DATE, 'LOC_INST_IMG',req.body.LOC_INST_IMG, 'LOC_INST_FB_LINK',req.body.LOC_INST_FB_LINK, 'LOC_INST_LINKEDIN_LINK', req.body.LOC_INST_LINKEDIN_LINK, 'LOC_INST_TWITTER_LINK', req.body.LOC_INST_TWITTER_LINK, 'LOC_INST_WEBSITE_LINK',req.body.LOC_INST_WEBSITE_LINK, 'LOC_INST_ID',req.body.LOC_INST_ID];
 				updateQry = mysql.format(updateQry, updateData);
 			} else {
 				updateQry = 'UPDATE INSTITUTE_REGISTRATION SET ??=?,??=?,??=?,??=?,??=? WHERE ??=?';
@@ -314,5 +320,37 @@ router.post('/updateInstituteBasicInfo', function(req,res){
 		}
 	});
 });
+
+router.put('/updateLocationandCourseOffering', function(req,res){
+	var chkQry = "SELECT * FROM INSTITUTE_REGISTRATION WHERE ??=?";
+	var cheQryData = ['LOC_INST_ID',req.body.instid];
+	chkQry = mysql.format(chkQry,cheQryData);
+	sqlGetCall(chkQry,function(results){
+		//console.log(results);
+		if(results.length > 0){
+			var updateQry = "UPDATE INSTITUTE_REGISTRATION SET ??=?, ??=? WHERE ??=?";
+			var updateData = ['LOC_INST_OFFER_LOCATION',req.body.locations,'LOC_INST_OFFER_COURSE',req.body.courses,'LOC_INST_ID',req.body.instid];
+			updateQry = mysql.format(updateQry, updateData);
+			//console.log(updateQry);
+			sqlGetCall(updateQry, function(r){
+				//console.log(r);
+				res.json({status: true, message: 'Location and Courses Details updated successfully'});
+			});
+		}
+	});
+});
+
+function sqlGetCall(query,callback){
+	if(query){
+		connection.query(query, function(err,res){
+			setTimeout(function() {
+				if(err){
+					callback(err);
+				}
+				callback(res);
+			}, 100);
+		});	
+	}
+}
 
 module.exports = router;

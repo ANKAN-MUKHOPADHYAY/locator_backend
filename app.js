@@ -4,6 +4,7 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var session = require('express-session');
 var cors = require('cors');
 
 var index = require('./routes/index');
@@ -12,6 +13,8 @@ var adminOps = require('./routes/adminoperations');
 var searchOps = require('./routes/search/searchOperations');
 var userOps = require('./routes/user/userOperations');
 var instOps = require('./routes/institute/instituteOperations');
+var recommendOps = require('./routes/recommendation/recommendOperation');
+var uploadOps = require('./routes/upload/uploadOperations');
 
 var app = express();
 
@@ -26,6 +29,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(session({resave: true, saveUninitialized: true, secret: 'SOMERANDOMSECRETHERE', cookie: { maxAge: 60000 }}));
 app.use(cors());
 app.use('/api/v1', index);
 app.use('/api/v1/users', users);
@@ -33,12 +37,22 @@ app.use('/api/v1/admin', adminOps);
 app.use('/api/v1/search', searchOps);
 app.use('/api/v1/user', userOps);
 app.use('/api/v1/institute', instOps);
+app.use('/api/v1/recommend',recommendOps);
+app.use('/api/v1/uploadOps', uploadOps);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   var err = new Error('Not Found');
   err.status = 404;
   next(err);
+});
+
+
+app.use(function(req, res, next) { //allow cross origin requests
+  res.setHeader("Access-Control-Allow-Methods", "POST, PUT, OPTIONS, DELETE, GET");
+  res.header("Access-Control-Allow-Origin", "http://localhost");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
 });
 
 // error handler
