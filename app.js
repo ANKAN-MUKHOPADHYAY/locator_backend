@@ -15,6 +15,7 @@ var userOps = require('./routes/user/userOperations');
 var instOps = require('./routes/institute/instituteOperations');
 var recommendOps = require('./routes/recommendation/recommendOperation');
 var uploadOps = require('./routes/upload/uploadOperations');
+var salesOps = require('./routes/sales/salesOperations');
 
 var app = express();
 
@@ -39,6 +40,7 @@ app.use('/api/v1/user', userOps);
 app.use('/api/v1/institute', instOps);
 app.use('/api/v1/recommend',recommendOps);
 app.use('/api/v1/uploadOps', uploadOps);
+app.use('/api/v1/sales', salesOps);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

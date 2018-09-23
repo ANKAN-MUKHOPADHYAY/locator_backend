@@ -8,8 +8,8 @@ router.get('/recommended/:enqid/:currentinstid', function(req,res){
 	var recommQry = "Select * from USER_ENQUIRY where ??=?";
 	var recommData = ['LOC_ENQ_ID',req.params.enqid];
 	recommQry = mysql.format(recommQry,recommData);
-	//console.log(recommQry);
 	sqlGetCall(recommQry, function(data){
+		console.log(data);
 		var queryLC,queryLCData;
 		queryLC= 'SELECT * from INSTITUTE_REGISTRATION where find_in_set(?,??) <> 0 and find_in_set(?,??) <> 0';
 		queryLCData = [data[0].LOC_SELECTED_COURSE,'LOC_INST_OFFER_COURSE',data[0].LOC_SELECTED_LOCATION,'LOC_INST_OFFER_LOCATION'];

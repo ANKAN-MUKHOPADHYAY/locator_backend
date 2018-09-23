@@ -6,7 +6,7 @@ var md5 = require('md5');
 
 
 router.post('/loginCandidate', function(req,res){
-	//console.log(req.body);
+	console.log(req.body);
 	if(!req.session.count)
 		req.session.count = 1;
 	 else 
@@ -30,7 +30,7 @@ router.post('/loginCandidate', function(req,res){
 			req.session.sessionVal = md5(results[0].LOC_USER_ID+results[0].LOC_USER_FNAME);
 			results[0].session = req.session;
 			console.log(req.session);
-			createAccessLog(results[0]);
+			//createAccessLog(results[0]);
 			res.json({status: true,message: 'User Login Successful',result: results[0]});
 		}
 	});
@@ -92,6 +92,7 @@ function createAccessLog(data){
 }
 
 router.post('/adduser', function(req,res){
+	console.log('HERE');
 	var chkQry = "SELECT * FROM USER_REGISTRATION WHERE ??=? OR ??=? OR ??=?";
 	var cheQryData = ['LOC_USER_MOBILE',req.body.u_mobile,'LOC_USER_EMAIL',req.body.u_email,'LOC_USER_ALT_CONTACT',req.body.u_mobile];
 	chkQry = mysql.format(chkQry,cheQryData);

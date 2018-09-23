@@ -57,5 +57,88 @@ router.post('/addlocation',function(req,res){
 	});
 });
 
+router.post('/deleteCourse', function(req,res){
+	var chkQry = 'SELECT * from OFFERED_COURSES where ??=?';
+	var cheQryData = ['LOC_COURSE_ID',req.body.LOC_COURSE_ID];
+	chkQry = mysql.format(chkQry,cheQryData);
+	sqlGetCall(chkQry, function(results){
+		if(results.length>=1){
+			var updateQry = 'DELETE FROM OFFERED_COURSES WHERE ??=?';
+			var updateData = ['LOC_COURSE_ID',req.body.LOC_COURSE_ID];
+			updateQry = mysql.format(updateQry,updateData);
+			console.log(updateQry);
+			sqlGetCall(updateQry, function(resp){
+				if(results.length>=1){
+					res.json({status:true, result: "Deleted Successfully"})
+				}
+			});
+		} else {
+			res.json({status:false, result: "Course doesn't exist"});
+		}
+	});
+});
+
+router.post('/disableEnableCourse', function(req,res){
+	var chkQry = 'SELECT * from OFFERED_COURSES where ??=?';
+	var cheQryData = ['LOC_COURSE_ID',req.body.LOC_COURSE_ID];
+	chkQry = mysql.format(chkQry,cheQryData);
+	sqlGetCall(chkQry, function(results){
+		if(results.length>=1){
+			var updateQry,updateData;
+			if(req.body.job=="DISABLE"){
+				updateQry = 'UPDATE OFFERED_COURSES SET LOC_COURSE_ACTIVE_STATUS=0 WHERE ??=?';
+				updateData = ['LOC_COURSE_ID',req.body.LOC_COURSE_ID];
+				updateQry = mysql.format(updateQry,updateData);
+			} else {
+				updateQry = 'UPDATE OFFERED_COURSES SET LOC_COURSE_ACTIVE_STATUS=1 WHERE ??=?';
+				updateData = ['LOC_COURSE_ID',req.body.LOC_COURSE_ID];
+				updateQry = mysql.format(updateQry,updateData);
+			}
+			console.log(updateQry);
+			sqlGetCall(updateQry, function(resp){
+				if(results.length>=1){
+					res.json({status:true, result: "Course Status Updated Successfully"})
+				}
+			});
+		} else {
+			res.json({status:false, result: "Course doesn't exist"});
+		}
+	});
+});
+
+router.post('/deleteLocation', function(req,res){
+	var chkQry = 'SELECT * from OFFERED_LOCATIONS where ??=?';
+	var cheQryData = ['LOC_LOCATION_ID',req.body.LOC_LOCATION_ID];
+	chkQry = mysql.format(chkQry,cheQryData);
+	sqlGetCall(chkQry, function(results){
+		if(results.length>=1){
+			var updateQry = 'DELETE FROM OFFERED_LOCATIONS WHERE ??=?';
+			var updateData = ['LOC_LOCATION_ID',req.body.LOC_LOCATION_ID];
+			updateQry = mysql.format(updateQry,updateData);
+			console.log(updateQry);
+			sqlGetCall(updateQry, function(resp){
+				if(results.length>=1){
+					res.json({status:true, result: "Deleted Successfully"})
+				}
+			});
+		} else {
+			res.json({status:false, result: "Location doesn't exist"});
+		}
+	});
+});
+
+function sqlGetCall(query,callback){
+	if(query){
+		connection.query(query, function(err,res){
+			setTimeout(function() {
+				if(err){
+					callback(err);
+				}
+				callback(res);
+			}, 100);
+		});	
+	}
+}
+
 
 module.exports = router;
