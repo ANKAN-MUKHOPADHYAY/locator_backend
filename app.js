@@ -7,8 +7,8 @@ var bodyParser = require('body-parser');
 var session = require('express-session');
 var cors = require('cors');
 
+var verifyToken = require('./routes/auth/verifyToken');
 var index = require('./routes/index');
-var users = require('./routes/users');
 var adminOps = require('./routes/adminoperations');
 var searchOps = require('./routes/search/searchOperations');
 var userOps = require('./routes/user/userOperations');
@@ -33,14 +33,27 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({resave: true, saveUninitialized: true, secret: 'SOMERANDOMSECRETHERE', cookie: { maxAge: 60000 }}));
 app.use(cors());
 app.use('/api/v1', index);
-app.use('/api/v1/users', users);
-app.use('/api/v1/admin', adminOps);
-app.use('/api/v1/search', searchOps);
-app.use('/api/v1/user', userOps);
-app.use('/api/v1/institute', instOps);
-app.use('/api/v1/recommend',recommendOps);
-app.use('/api/v1/uploadOps', uploadOps);
-app.use('/api/v1/sales', salesOps);
+//app.use('/api/v1/admin', adminOps);
+//app.use('/api/v1/search', searchOps);
+
+var apiRoutes = express.Router();
+apiRoutes.use(bodyParser.urlencoded({ extended: true }));
+apiRoutes.use(bodyParser.json());
+
+//route middleware to verify a token 
+apiRoutes.use(verifyToken);
+
+app.use('/user', userOps);
+apiRoutes.use('/admin', adminOps);
+apiRoutes.use('/search',searchOps);
+apiRoutes.use('/institute', instOps);
+app.use('/recommend',recommendOps);
+app.use('/uploadOps', uploadOps);
+app.use('/sales', salesOps);
+
+app.use('/api/v1', apiRoutes);
+
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
