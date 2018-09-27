@@ -103,4 +103,36 @@ router.post('/adduser', function (req, res) {
 	});
 });
 
+router.get('/searchcourses/:course', function(req,res){
+	console.log(req.params.course);
+	var x =  '%'+req.params.course+'%';
+	var searchQry = 'SELECT * from OFFERED_COURSES where ?? like ?';
+	var searchQryData = ['LOC_COURSE_NAME',x];
+	searchQry = mysql.format(searchQry,searchQryData);
+	console.log(searchQry);
+	connection.query(searchQry,function(err,results){
+		if(results.length>=1){
+			res.json({status:true, response: results});
+		}else{
+			res.json({status:false, response: "Course Not Found"});
+		}
+	});
+});
+
+router.get('/searchlocations/:location', function(req,res){
+	//console.log(req.params.course);
+	var x =  '%'+req.params.location+'%';
+	var searchQry = 'SELECT * from OFFERED_LOCATIONS where ?? like ? or ??=? or ?? like ? ';
+	var searchQryData = ['LOC_LOCATION_NAME',x, 'LOC_LOCATION_PINCODE',req.params.location, 'LOC_LOCATION_RELEVANCE_NAME',x];
+	searchQry = mysql.format(searchQry,searchQryData);
+	console.log(searchQry);
+	connection.query(searchQry,function(err,results){
+		if(results.length>=1){
+			res.json({status:true, response: results});
+		}else{
+			res.json({status:false, response: "Location Not Found"});
+		}
+	});
+});
+
 module.exports = router;

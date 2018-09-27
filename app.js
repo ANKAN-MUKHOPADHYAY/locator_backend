@@ -43,13 +43,13 @@ apiRoutes.use(bodyParser.json());
 //route middleware to verify a token 
 apiRoutes.use(verifyToken);
 
-app.use('/user', userOps);
+apiRoutes.use('/user', userOps);
 apiRoutes.use('/admin', adminOps);
 apiRoutes.use('/search',searchOps);
 apiRoutes.use('/institute', instOps);
-app.use('/recommend',recommendOps);
-app.use('/uploadOps', uploadOps);
-app.use('/sales', salesOps);
+apiRoutes.use('/recommend',recommendOps);
+apiRoutes.use('/uploadOps', uploadOps);
+apiRoutes.use('/sales', salesOps);
 
 app.use('/api/v1', apiRoutes);
 
