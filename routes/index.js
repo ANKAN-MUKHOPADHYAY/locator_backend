@@ -135,4 +135,94 @@ router.get('/searchlocations/:location', function(req,res){
 	});
 });
 
+router.post('/loginInstitute', function(req,res){
+	//console.log("you are here");
+	var chkQry = "SELECT * FROM INSTITUTE_REGISTRATION WHERE (??=? OR ??=?) AND ??=?";
+	var cheQryData = ['LOC_INST_CONTACT',req.body.i_loginparams,'LOC_INST_EMAIL',req.body.i_loginparams,'LOC_INST_PWD',md5(req.body.i_password)];
+	chkQry = mysql.format(chkQry,cheQryData);
+	//console.log(chkQry);
+	connection.query(chkQry,function(errr,results){
+		//console.log(results);
+		if(results.length > 1){
+			res.json({status: false, message: 'Institute Details exist more than one'});
+		}else if(results.length < 1){
+			res.json({status: false, message: 'Login information incorrect'});
+		} else {
+			var token = jwt.sign(results, config.secret, {
+				expiresIn: 1440
+			});
+			user_id = results[0].user_id;
+			var data = {
+				LOC_USER_ID: results[0].LOC_INST_ID,
+				DEVICE_TYPE: req.body.device_type,
+				ACCESS_TOKEN: token,
+				IP_ADDRESS: req.body.ip
+			}
+			//console.log(data);
+			var query = "INSERT INTO  ?? SET  ?";
+			var table = ["ACCESS_LOG"];
+			query = mysql.format(query, table);
+			console.log(query);
+			connection.query(query, data, function (err, rows) {
+				if (err) {
+					res.json({ "status": false, "Message": "Error executing MySQL query" });
+				} else {
+					delete(results[0].inst_off_courses);
+					delete(results[0].inst_prefer_locations);
+					delete (results[0].inst_password);
+					results[0].ACCESS_TOKEN = token;
+					//res.json({ status: true, message: 'User Login Successful', result: results[0] });
+					res.json({status: true,message: 'Institute Login Successful',result: results[0]});
+				}
+			});
+		}
+	});
+});
+
+router.post('/addinstitute', function(req,res){
+	//console.log("you are here");
+	var chkQry = "SELECT * FROM INSTITUTE_REGISTRATION WHERE ??=? OR ??=? OR ??=?";
+	var cheQryData = ['LOC_INST_NAME',req.body.i_name,'LOC_INST_CONTACT',req.body.i_contact,'LOC_INST_EMAIL',req.body.i_email];
+	chkQry = mysql.format(chkQry,cheQryData);
+	//console.log(chkQry);
+	connection.query(chkQry,function(errr,results){
+		if(results.length<1){
+			var query = 'INSERT into INSTITUTE_REGISTRATION (??,??,??,??,??,??,??,??) values (?,?,?,?,?,?,?,?)';
+			var data = ['LOC_INST_NAME','LOC_INST_ADDRESS','LOC_INST_CITY','LOC_INST_CONTACT','LOC_INST_ALTCONTACT','LOC_INST_EMAIL', 'LOC_INST_PWD', 'LOC_INST_IMG', req.body.i_name, req.body.i_address,req.body.i_city, req.body.i_contact,req.body.i_altcontact, req.body.i_email,md5(req.body.i_password), req.body.i_images];
+			query = mysql.format(query,data);
+			//console.log(query);
+			connection.query(query,function(err,result){
+				//console.log(result);
+				var x = {};
+				x.user_id = result.insertId;
+
+
+				// Create Token as user logs in
+				var token = jwt.sign(results, config.secret, {
+					expiresIn: 1440
+				});
+				var data = {
+					LOC_USER_ID: x.user_id,
+					DEVICE_TYPE: req.body.device_type,
+					ACCESS_TOKEN: token,
+					IP_ADDRESS: req.body.ip
+				}
+				//console.log(data);
+				var query = "INSERT INTO  ?? SET  ?";
+				var table = ["ACCESS_LOG"];
+				query = mysql.format(query, table);
+				connection.query(query, data, function (err, rows) {
+					if (err) {
+						res.json({ "status": false, "Message": "Error executing MySQL query" });
+					} else {
+						x.ACCESS_TOKEN = token;
+						res.json({status: true, message: 'Institute Added Successfully',result: x});
+					}
+				});
+			});
+		}else{
+			res.json({status: false,message: 'Institute Already Exist',result: results[0]});
+		}
+	});
+});
 module.exports = router;
